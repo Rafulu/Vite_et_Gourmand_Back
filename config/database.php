@@ -1,8 +1,8 @@
 <?php
 $host = 'mariadb';
-$dbname = 'restaurant';
-$user = 'user';
-$password = 'password';
+$dbname = 'vite-et-gourmand';
+$user = 'jose';
+$password = 'admin';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $password);
