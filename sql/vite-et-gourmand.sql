@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : mariadb
--- Généré le : sam. 09 mai 2026 à 10:20
+-- Généré le : sam. 09 mai 2026 à 10:25
 -- Version du serveur : 10.11.16-MariaDB-ubu2204
 -- Version de PHP : 8.3.31
 
@@ -345,7 +345,8 @@ CREATE TABLE `Users` (
   `first_name` varchar(100) NOT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `role_id` int(11) NOT NULL,
-  `create_at` datetime NOT NULL
+  `create_at` datetime NOT NULL,
+  `is_blocked` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
