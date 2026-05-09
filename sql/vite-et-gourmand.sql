@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : mariadb
--- Généré le : sam. 09 mai 2026 à 09:52
+-- Généré le : sam. 09 mai 2026 à 10:20
 -- Version du serveur : 10.11.16-MariaDB-ubu2204
 -- Version de PHP : 8.3.31
 
@@ -127,6 +127,18 @@ CREATE TABLE `dishes` (
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `images`
+--
+
+CREATE TABLE `images` (
+  `id` int(11) NOT NULL,
+  `path` varchar(255) NOT NULL,
+  `alt` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `menus`
 --
 
@@ -139,6 +151,17 @@ CREATE TABLE `menus` (
   `theme_id` int(11) DEFAULT NULL,
   `description` text NOT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `menu_image`
+--
+
+CREATE TABLE `menu_image` (
+  `menu_id` int(11) NOT NULL,
+  `image_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -383,11 +406,24 @@ ALTER TABLE `dishes`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Index pour la table `images`
+--
+ALTER TABLE `images`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Index pour la table `menus`
 --
 ALTER TABLE `menus`
   ADD PRIMARY KEY (`id`),
   ADD KEY `theme_id` (`theme_id`);
+
+--
+-- Index pour la table `menu_image`
+--
+ALTER TABLE `menu_image`
+  ADD KEY `image_id` (`image_id`),
+  ADD KEY `menu_id` (`menu_id`);
 
 --
 -- Index pour la table `orders`
@@ -499,6 +535,12 @@ ALTER TABLE `conditions`
 -- AUTO_INCREMENT pour la table `dishes`
 --
 ALTER TABLE `dishes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT pour la table `images`
+--
+ALTER TABLE `images`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -616,6 +658,13 @@ ALTER TABLE `condition_menu`
 --
 ALTER TABLE `menus`
   ADD CONSTRAINT `menus_ibfk_1` FOREIGN KEY (`theme_id`) REFERENCES `themes` (`id`) ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `menu_image`
+--
+ALTER TABLE `menu_image`
+  ADD CONSTRAINT `menu_image_ibfk_1` FOREIGN KEY (`image_id`) REFERENCES `images` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `menu_image_ibfk_2` FOREIGN KEY (`menu_id`) REFERENCES `menus` (`id`) ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `orders`
