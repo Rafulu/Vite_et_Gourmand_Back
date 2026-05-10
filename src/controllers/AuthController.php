@@ -3,6 +3,8 @@
 class AuthController {
     
     public function login($email, $password) {
+        $email = SecurityHelper::sanitize($email);
+
         $userModel = new UserModel($this->pdo);
         $user = $userModel->findByEmail($email);
 
@@ -22,6 +24,22 @@ class AuthController {
     }
 
     public function register($data) {
+        // Nettoyer les données
+        $data['email'] = SecurityHelper::sanitize($data['email']);
+        $data['last_name'] = SecurityHelper::sanitize($data['last_name']);
+        $data['first_name'] = SecurityHelper::sanitize($data['first_name']);
+        $data['phone'] = SecurityHelper::sanitize($data['phone']);
+
+        // Valider email
+        if (!SecurityHelper::validateEmail($data['email'])) {
+            return ['error' => 'Email invalide'];
+        }
+
+        // Valider mot de passe
+        if (!SecurityHelper::validatePassword($data['password'])) {
+            return ['error' => 'Mot de passe invalide'];
+        }
+
         //traitement inscription
         $userModel = new UserModel($this->pdo);
 
@@ -51,7 +69,7 @@ class AuthController {
             return ['success' => true];
         }
 
-        // Génerer un token unique
+        // Génerer un token unique pour reinitialisation mdp
         $token = bin2hex(random_bytes(32));
 
         // Stocker  le token en BDD
