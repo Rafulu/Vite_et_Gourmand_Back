@@ -9,11 +9,11 @@ class AuthController {
         $user = $userModel->findByEmail($email);
 
         if (!$user) {
-            return ['error' => 'Email ou mot de passe incorrect'];
+            return ['error' => 'Une erreur est survenue, vérifiez vos informations'];
         }
 
         if (!password_verify($password, $user['password'])) {
-            return ['error' => 'Email ou mot de passe incorrect'];
+            return ['error' => 'Une erreur est survenue, vérifiez vos informations'];
         }
 
         session_start();
@@ -32,12 +32,12 @@ class AuthController {
 
         // Valider email
         if (!SecurityHelper::validateEmail($data['email'])) {
-            return ['error' => 'Email invalide'];
+            return ['error' => 'Une erreur est survenue, vérifiez vos informations'];
         }
 
         // Valider mot de passe
         if (!SecurityHelper::validatePassword($data['password'])) {
-            return ['error' => 'Mot de passe invalide'];
+            return ['error' => 'Une erreur est survenue, vérifiez vos informations'];
         }
 
         //traitement inscription

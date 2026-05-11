@@ -45,7 +45,7 @@ class SecurityHelper {
         return true;
     }
 
-    // Nettoyage des données d'un formalaire
+    // Nettoyage des données d'un formulaire
     public static function sanitize($data) {
         return htmlspecialchars(strip_tags(trim($data)));
     }
