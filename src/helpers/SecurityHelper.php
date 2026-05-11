@@ -27,7 +27,7 @@ class SecurityHelper {
 
     // Vérification mise en forme password
     public static function validatePassword($password) {
-        if (strlen($password) < 10) {
+        if (strlen($password) < 14) {
             return false;
         }
         if (!preg_match('/[A-Z]/', $password)) {
