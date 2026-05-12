@@ -1,6 +1,12 @@
 <?php
 
 class AuthController {
+
+    private $pdo;
+
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
+    }
     
     public function login($email, $password) {
         $email = SecurityHelper::sanitize($email);
@@ -20,7 +26,7 @@ class AuthController {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['role_id'] = $user['role_id'];
 
-        return ['sucess' => true];
+        return ['success' => true];
     }
 
     public function register($data) {
