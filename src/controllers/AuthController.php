@@ -22,10 +22,6 @@ class AuthController {
             return ['error' => 'Une erreur est survenue, vérifiez vos informations'];
         }
 
-        session_start();
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['role_id'] = $user['role_id'];
-
         return ['success' => true];
     }
 

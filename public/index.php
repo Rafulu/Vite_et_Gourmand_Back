@@ -6,41 +6,69 @@ session_start();
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 
+//Header CORS - autorise les requêtes cross-origin pour l'API REST (Autorise le front et le back à communiquer)
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+header('Access-Control-Allow-Headers: Content-Type');
+
+
+//Récupère le chemin de l'URL pour savoir où aller
 $url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+//Récupère la méthode HTTP pour savoir quoi faire
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Config
+
+// Config : Configuration de la connexion à la BDD
 require_once '../config/database.php';
 
-// Models
+// Models : Gestion des données de la BDD
 require_once '../src/models/UserModel.php';
 require_once '../src/models/TokenModel.php';
+require_once '../src/models/MenuModel.php';
 
-// Controllers
+// Controllers : Logique métier de l'application
 require_once '../src/controllers/AuthController.php';
+require_once '../src/controllers/MenuController.php';
 
-// Helpers
+// Helpers: Fonctions utilitaires de sécurité
 require_once '../src/helpers/SecurityHelper.php';
 
+// Création des objets en fonction de leur classes
+$auth = new AuthController($pdo);
+$menu = new MenuController($pdo);
 
-$auth = new AuthController();
+// Gestion des routes dynamiques avec ID
+if (preg_match('/^\/menus\/(\d+)$/', $url, $matches)) {
+    $id = $matches[1];
+    $result = $menu->getById($id);
+    echo json_encode($result);
+    exit();
+}
 
-switch($uri) {
+switch($url) {
 
     //Pages publiques
     case '/':
         break;
     case '/menus':
+        if ($method === 'GET') {
+            $menu = $menu->getAll();
+            echo json_encode($menus);
+        }
         break;
-    case '/login':
+
+    case '/login':s
         if ($method === 'GET') {
             // afficher le formulaire
             require_once '../src/views/client/login.php';
         }
         if ($method === 'POST') {
             // traiter la connexion
-            $email = $_POST['email'];
-            $password = $_POST['password'];
+            $data = json_decode(file_get_contents('php://input'), true);
+            $email = $data['email'];
+            $password = $data['password'];
             $result = $auth->login($email, $password);
             if (isset($result['success'])) {
                 if ($_SESSION['role_id'] == 1){
@@ -58,27 +86,26 @@ switch($uri) {
         }
         break;
     case '/register':
-         if ($method === 'GET') {
-        require_once '../src/views/client/register.php';
-    }
-    if ($method === 'POST') {
-        $data = [
-            'email' => $_POST['email'],
-            'password' => $_POST['password'],
-            'last_name' => $_POST['last_name'],
-            'first_name' => $_POST['first_name'],
-            'phone' => $_POST['phone'],
-            'role_id' => 5
-        ];
-        $result = $auth->register($data);
+        if ($method === 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $data['role_id'] = 5;
+            $result = $auth->register($data);
+            echo json_encode($result);
+        }
+        if ($method === 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            //var_dump($data);
+            //die();
+            $data['role_id'] = 5;
+            $result = $auth->register($data);
         if (isset($result['success'])) {
             header('Location: /login');
             exit();
-        }
+            }
         if (isset($result['error'])) {
             $error = $result['error'];
+            }
         }
-    }
         break;
     case '/forgot-password':
         if ($method === 'GET') {
@@ -99,7 +126,7 @@ switch($uri) {
     // Espace Client - Utilisateur connecté
     case '/account':
         SecurityHelper::requireLogin();
-        require_once '../src/views/client/account.php'
+         echo json_encode(['message' => 'Espace client', 'user_id' => $_SESSION['user_id']]);
         break;
 
     case '/orders':
@@ -108,7 +135,7 @@ switch($uri) {
     // Espace Employé
     case '/employee':
         SecurityHelper::requireRole(2);
-        require_once '..src/views/employee/dashboard.php'
+        require_once '../src/views/employee/dashboard.php';
         break;
 
     case '/employee/orders':
@@ -117,7 +144,7 @@ switch($uri) {
     // Esapce admin
     case '/admin':
         SecurityHelper::requireRole(1);
-        require_once '..src/views/admin/dashboard.php'
+        require_once '../src/views/admin/dashboard.php';
         break;
     case '/admin/employees':
         break;

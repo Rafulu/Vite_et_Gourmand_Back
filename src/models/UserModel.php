@@ -1,5 +1,4 @@
 <?php
-
 class UserModel {
 
     private $pdo;
@@ -9,16 +8,16 @@ class UserModel {
     }
     public function findByemail($email) {
         //Cherchr par email
-        $stmt = $this->pdo->prepare("SELECT * FROM Users WHERE email = :email");
+        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE email = :email");
         $stmt->execute(['email' => $email]);
-        return $stmt->fetch(PDO: :FETCH_ASSOC);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
         }
         
     public function create($data) {
         //créer un nouveau user
         $stmt = $this->pdo->prepare ("
-            INSERT INTO Users (email, password, last_name, first_name, phone, role_id, created_at)
-            VALUES (:email, :password, :last_name, :first_name, :phone, :role_id, NOW()))
+            INSERT INTO users (email, password, last_name, first_name, phone, role_id, create_at)
+            VALUES (:email, :password, :last_name, :first_name, :phone, :role_id, NOW())
         ");
         $stmt->execute([
             ':email' => $data['email'],
