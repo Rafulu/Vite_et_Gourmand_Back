@@ -23,4 +23,10 @@ class MenuController {
         }
         return $menu;
     }
+
+    // Récupère les menus selon les filtres
+    public function getWithFilters($filters) {
+        $menuModel = new MenuModel($this->pdo);
+        return $menuModel->findWithFilters($filters);
+    }
 }

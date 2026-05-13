@@ -54,7 +54,8 @@ switch($url) {
         break;
     case '/menus':
         if ($method === 'GET') {
-            $menu = $menu->getAll();
+            $filters = json_decode(file_get_contents('php://input'), true) ?? [];
+            $menus = $menu->getWithFilters($filters);
             echo json_encode($menus);
         }
         break;
