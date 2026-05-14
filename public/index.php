@@ -44,7 +44,7 @@ require_once '../src/helpers/SecurityHelper.php';
 $auth = new AuthController($pdo);
 $menu = new MenuController($pdo);
 $dish = new DishController($pdo);
-$dish = new OrderController($pdo);
+$order = new OrderController($pdo);
 
 // Gestion des routes dynamiques pour les menus 
 if (preg_match('/^\/menus\/(\d+)$/', $url, $matches)) {
@@ -120,30 +120,15 @@ switch($url) {
 
     case '/login':
         if ($method === 'GET') {
-            // afficher le formulaire
-            require_once '../src/views/client/login.php';
+            echo json_encode(['message' => 'Formulaire connexion']);
         }
         if ($method === 'POST') {
-            // traiter la connexion
             $data = json_decode(file_get_contents('php://input'), true);
-            $email = $data['email'];
-            $password = $data['password'];
-            $result = $auth->login($email, $password);
-            if (isset($result['success'])) {
-                if ($_SESSION['role_id'] == 1){
-                    header('Location: /admin');
-                } elseif ($_SESSION['role_id'] == 2) {
-                    header('Location: /employee');
-                } else {
-                    header('Location: /account');
-                }
-                exit();
-            }
-            if (isset($result['error'])) {
-                $error = $result['error'];
-            }
+            $result = $auth->login($data['email'], $data['password']);
+            echo json_encode($result);
         }
         break;
+
     case '/register':
         if ($method === 'POST') {
             $data = json_decode(file_get_contents('php://input'), true);
@@ -151,34 +136,18 @@ switch($url) {
             $result = $auth->register($data);
             echo json_encode($result);
         }
-        if ($method === 'POST') {
-            $data = json_decode(file_get_contents('php://input'), true);
-            //var_dump($data);
-            //die();
-            $data['role_id'] = 5;
-            $result = $auth->register($data);
-        if (isset($result['success'])) {
-            header('Location: /login');
-            exit();
-            }
-        if (isset($result['error'])) {
-            $error = $result['error'];
-            }
-        }
-        break;
+        
     case '/forgot-password':
         if ($method === 'GET') {
-        require_once '../src/views/client/forgot-password.php'; 
-    }
-    if ($method === 'POST') {
-        $email = $_POST['email'];
-        $result = $auth->forgotPassword($email);
-        if (isset($result['success'])) {
-            $success = ['Un email vous a été envoyé si ce compte existe'];
+            echo json_encode(['message' => 'Formulaire réinitialisation mot de passe']);
         }
-    }
+        if ($method === 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $result = $auth->forgotPassword($data['email']);
+            echo json_encode($result);
+        }
         break;
-
+        
     case '/contact':
         break;
     
@@ -188,9 +157,6 @@ switch($url) {
          echo json_encode(['message' => 'Espace client', 'user_id' => $_SESSION['user_id']]);
         break;
 
-    case '/orders':
-        break;
-    
     // Espace Employé
     case '/employee':
         SecurityHelper::requireRole(2);
