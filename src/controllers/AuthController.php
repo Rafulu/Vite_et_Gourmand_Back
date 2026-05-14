@@ -22,7 +22,7 @@ class AuthController {
             return ['error' => 'Une erreur est survenue, vérifiez vos informations'];
         }
 
-        return ['success' => true];
+        return ['success' => true, 'session_id' => session_id(), 'role_id' => $user['role_id']];
     }
 
     public function register($data) {

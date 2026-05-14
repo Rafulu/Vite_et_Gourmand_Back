@@ -12,7 +12,8 @@ class SecurityHelper {
 
     public static function requireLogin() {
         if (!self::isLoggedIn()) {
-            header('Location: /login');
+            http_response_code(401);
+            echo json_encode(['error' => 'Non autorisé, veuillez vous connecter']);
             exit();
         }
     }

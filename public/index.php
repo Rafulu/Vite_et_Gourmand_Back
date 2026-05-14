@@ -29,12 +29,16 @@ require_once '../src/models/TokenModel.php';
 require_once '../src/models/MenuModel.php';
 require_once '../src/models/DishModel.php';
 require_once '../src/models/OrderModel.php';
+require_once '../src/models/ReviewModel.php';
+require_once '../src/models/AddressModel.php';
 
 // Controllers : Logique métier de l'application
 require_once '../src/controllers/AuthController.php';
 require_once '../src/controllers/MenuController.php';
 require_once '../src/controllers/DishController.php';
 require_once '../src/controllers/OrderController.php';
+require_once '../src/controllers/ReviewController.php';
+require_once '../src/controllers/AddressController.php';
 
 // Helpers: Fonctions utilitaires de sécurité
 require_once '../src/helpers/SecurityHelper.php';
@@ -45,6 +49,9 @@ $auth = new AuthController($pdo);
 $menu = new MenuController($pdo);
 $dish = new DishController($pdo);
 $order = new OrderController($pdo);
+$review = new ReviewController($pdo);
+$address = new AddressController($pdo);
+
 
 // Gestion des routes dynamiques pour les menus 
 if (preg_match('/^\/menus\/(\d+)$/', $url, $matches)) {
@@ -84,6 +91,20 @@ if (preg_match('/^\/orders\/(\d+)$/', $url, $matches)) {
     exit();
 }
 
+// Routes dynamiques adresses
+if (preg_match('/^\/addresses\/(\d+)$/', $url, $matches)) {
+    SecurityHelper::requireLogin();
+    $id = $matches[1];
+    if ($method === 'PUT') {
+        $data = json_decode(file_get_contents('php://input'), true);
+        echo json_encode($address->update($id, $data));
+    }
+    if ($method === 'DELETE') {
+        echo json_encode($address->delete($id));
+    }
+    exit();
+}
+
 switch($url) {
 
     //Pages publiques
@@ -117,7 +138,29 @@ switch($url) {
             echo json_encode($order->create($data));
         }
         break;
+    
+    case '/reviews':
+        if ($method === 'GET') {
+            echo json_encode($review->getAll());
+        }
+        if ($method === 'POST') {
+            SecurityHelper::requireLogin();
+            $data = json_decode(file_get_contents('php://input'), true);
+            echo json_encode($review->create($data));
+        }
+        break;
 
+    case '/addresses':
+        SecurityHelper::requireLogin();
+        if ($method === 'GET') {
+            echo json_encode($address->getMyAddresses());
+        }
+        if ($method === 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            echo json_encode($address->create($data));
+        }
+        break;
+        
     case '/login':
         if ($method === 'GET') {
             echo json_encode(['message' => 'Formulaire connexion']);
