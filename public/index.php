@@ -27,10 +27,12 @@ require_once '../config/database.php';
 require_once '../src/models/UserModel.php';
 require_once '../src/models/TokenModel.php';
 require_once '../src/models/MenuModel.php';
+require_once '../src/models/DishModel.php';
 
 // Controllers : Logique métier de l'application
 require_once '../src/controllers/AuthController.php';
 require_once '../src/controllers/MenuController.php';
+require_once '../src/controllers/DishController.php';
 
 // Helpers: Fonctions utilitaires de sécurité
 require_once '../src/helpers/SecurityHelper.php';
@@ -38,14 +40,32 @@ require_once '../src/helpers/SecurityHelper.php';
 // Création des objets en fonction de leur classes
 $auth = new AuthController($pdo);
 $menu = new MenuController($pdo);
+$dish = new DishController($pdo);
 
-// Gestion des routes dynamiques avec ID
+// Gestion des routes dynamiques pour les menus 
 if (preg_match('/^\/menus\/(\d+)$/', $url, $matches)) {
     $id = $matches[1];
     $result = $menu->getById($id);
     echo json_encode($result);
     exit();
 }
+
+// Gestion des routes dynamiques pour les plats
+if (preg_match('/^\/dishes\/(\d+)$/', $url, $matches)) {
+    $id = $matches[1];
+    if ($method === 'GET') {
+        echo json_encode($dish->getById($id));
+    }
+    if ($method === 'PUT') {
+        $data = json_decode(file_get_contents('php://input'), true);
+        echo json_encode($dish->update($id, $data));
+    }
+    if ($method === 'DELETE') {
+        echo json_encode($dish->disable($id));
+    }
+    exit();
+}
+
 
 switch($url) {
 
@@ -57,6 +77,16 @@ switch($url) {
             $filters = json_decode(file_get_contents('php://input'), true) ?? [];
             $menus = $menu->getWithFilters($filters);
             echo json_encode($menus);
+        }
+        break;
+
+    case '/dishes':
+        if ($method === 'GET') {
+            echo json_encode($dish->getAll());
+        }
+        if ($method === 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            echo json_encode($dish->create($data));
         }
         break;
 
