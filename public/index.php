@@ -28,19 +28,23 @@ require_once '../src/models/UserModel.php';
 require_once '../src/models/TokenModel.php';
 require_once '../src/models/MenuModel.php';
 require_once '../src/models/DishModel.php';
+require_once '../src/models/OrderModel.php';
 
 // Controllers : Logique métier de l'application
 require_once '../src/controllers/AuthController.php';
 require_once '../src/controllers/MenuController.php';
 require_once '../src/controllers/DishController.php';
+require_once '../src/controllers/OrderController.php';
 
 // Helpers: Fonctions utilitaires de sécurité
 require_once '../src/helpers/SecurityHelper.php';
+
 
 // Création des objets en fonction de leur classes
 $auth = new AuthController($pdo);
 $menu = new MenuController($pdo);
 $dish = new DishController($pdo);
+$dish = new OrderController($pdo);
 
 // Gestion des routes dynamiques pour les menus 
 if (preg_match('/^\/menus\/(\d+)$/', $url, $matches)) {
@@ -66,6 +70,19 @@ if (preg_match('/^\/dishes\/(\d+)$/', $url, $matches)) {
     exit();
 }
 
+// Routes dynamiques commandes
+if (preg_match('/^\/orders\/(\d+)$/', $url, $matches)) {
+    SecurityHelper::requireLogin();
+    $id = $matches[1];
+    if ($method === 'GET') {
+        echo json_encode($order->getById($id));
+    }
+    if ($method === 'PUT') {
+        $data = json_decode(file_get_contents('php://input'), true);
+        echo json_encode($order->updateStatus($id, $data));
+    }
+    exit();
+}
 
 switch($url) {
 
@@ -87,6 +104,17 @@ switch($url) {
         if ($method === 'POST') {
             $data = json_decode(file_get_contents('php://input'), true);
             echo json_encode($dish->create($data));
+        }
+        break;
+    
+    case '/orders':
+        SecurityHelper::requireLogin();
+        if ($method === 'GET') {
+            echo json_encode($order->getMyOrders());
+        }
+        if ($method === 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            echo json_encode($order->create($data));
         }
         break;
 
