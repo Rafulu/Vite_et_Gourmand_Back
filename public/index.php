@@ -60,7 +60,7 @@ switch($url) {
         }
         break;
 
-    case '/login':s
+    case '/login':
         if ($method === 'GET') {
             // afficher le formulaire
             require_once '../src/views/client/login.php';
