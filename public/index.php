@@ -7,7 +7,7 @@ header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 
 //Header CORS - autorise les requêtes cross-origin pour l'API REST (Autorise le front et le back à communiquer)
-header('Content-Type: application/json');
+//header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -163,7 +163,7 @@ switch($url) {
         
     case '/login':
         if ($method === 'GET') {
-            echo json_encode(['message' => 'Formulaire connexion']);
+            require_once '../src/views/client/login.php';
         }
         if ($method === 'POST') {
             $data = json_decode(file_get_contents('php://input'), true);

@@ -1,0 +1,194 @@
+/* Police */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');/* Variables */
+
+:root {
+    --couleur-principale: #8B2635;
+    --couleur-secondaire: #F2E8D9;
+    --couleur-texte-secondaire: #FFD700;
+    --couleur-texte: #2D2D2D;
+    --couleur-fond: #FFFFFF;
+    --couleur-accent: #7D9B76;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--couleur-texte);
+    background-color: var(--couleur-fond);
+}
+
+h2, h3 {
+    color: var(--couleur-texte);
+}
+
+/* Navbar */
+nav {
+    background-color: var(--couleur-principale);
+    border-bottom: 2px solid var(--couleur-principale);
+    padding: 15px 0;
+}
+
+nav .navbar-brand span {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--couleur-texte-secondaire);
+}
+
+nav .navbar-brand small {
+    font-size: 0.75rem;
+    color: var(--couleur-texte-secondaire);
+    font-style: italic;
+}
+
+nav .nav-link {
+    color: var(--couleur-texte-secondaire);
+    font-weight: 600;
+}
+
+nav .nav-link:hover {
+    color: var(--couleur-texte-secondaire);
+}
+
+nav .btn-outline-primary {
+    color: var(--couleur-texte-secondaire);
+    border-color: var(--couleur-texte-secondaire);
+}
+
+nav .btn-outline-primary:hover {
+    background-color: var(--couleur-texte-secondaire);
+    color: var(--couleur-principale);
+}
+
+nav .btn-primary {
+    background-color: var(--couleur-texte-secondaire);
+    border-color: var(--couleur-texte-secondaire);
+    color: var(--couleur-principale);
+}
+
+/* Footer */
+footer {
+    background-color: var(--couleur-principale);
+    color: white;
+}
+
+footer a {
+    color: #FFD700;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: white;
+}
+
+footer p {
+    color: white;
+    margin-bottom: 5px;
+}
+
+/* Footer mobile */
+@media (max-width: 768px) {
+    footer .col-12 {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+}
+
+/* Sections */
+section h2 {
+    color: var(--couleur-principale);
+    border-bottom: 2px solid var(--couleur-principale);
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+}
+
+section h3 {
+    color: var(--couleur-texte);
+}
+
+/* Carousel avis */
+#avisCarousel {
+    background-color: var(--couleur-secondaire);
+    padding: 30px 0;
+    border-radius: 10px;
+}
+
+#avisCarousel .carousel-control-prev-icon,
+#avisCarousel .carousel-control-next-icon {
+    filter: invert(1);
+}
+
+#avisCarousel .carousel-indicators button {
+    background-color: var(--couleur-principale);
+}
+
+/* Section équipe */
+.rounded-circle {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border: 3px solid var(--couleur-principale);
+}
+
+/* Section présentation */
+.img-fluid.rounded {
+    border: 3px solid var(--couleur-secondaire);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Boutons */
+.btn-primary {
+    background-color: var(--couleur-principale);
+    border-color: var(--couleur-principale);
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background-color: #6B1D29;
+    border-color: #6B1D29;
+}
+
+.btn-outline-primary {
+    color: var(--couleur-principale);
+    border-color: var(--couleur-principale);
+    font-weight: 600;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--couleur-principale);
+    color: white;
+}
+
+/* Formulaire */
+.form-control:focus {
+    border-color: var(--couleur-principale);
+    box-shadow: 0 0 0 0.2rem rgba(139, 38, 53, 0.25);
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--couleur-texte);
+}
+
+form a {
+    color: var(--couleur-principale);
+}
+
+form a:hover {
+    color: #6B1D29;
+}
+
+/* Carte Menus */
+.card-title {
+    font-weight: 800;
+    color: var(--couleur-principale);
+    
+} 
+
+.card {
+    border-color: var(--couleur-principale);
+    border-width: 3px;
+}
+
+.card-text {
+    font-weight: 400;
+    color: var(--couleur-texte)
+}
