@@ -10,7 +10,19 @@ class MenuModel {
 
     // Requête de base réutilisable
     private function baseQuery() {
-        return "SELECT * FROM menus WHERE is_active = 1";
+        return "
+            SELECT m.*, t.name as theme_name,
+            GROUP_CONCAT(DISTINCT a.name) as allergens,
+            GROUP_CONCAT(DISTINCT a.icon) as allergen_icons
+            FROM menus m
+            LEFT JOIN themes t ON m.theme_id = t.id
+            LEFT JOIN composition_menu cm ON m.id = cm.menu_id
+            LEFT JOIN dishes d ON cm.dish_id = d.id
+            LEFT JOIN allergen_dish ad ON d.id = ad.dish_id
+            LEFT JOIN allergens a ON ad.allergen_id = a.id
+            WHERE m.is_active = 1
+            GROUP BY m.id
+        ";
     }
 
     // Récupère tous les menus actifs

@@ -109,11 +109,12 @@ switch($url) {
     //Pages publiques
     case '/':
         break;
+
     case '/menus':
         if ($method === 'GET') {
-            $filters = json_decode(file_get_contents('php://input'), true) ?? [];
+            $filters = [];
             $menus = $menu->getWithFilters($filters);
-            echo json_encode($menus);
+            require_once '../src/views/menus.php';
         }
         break;
 
@@ -249,11 +250,25 @@ switch($url) {
         SecurityHelper::requireRole(1);
         require_once '../src/views/admin/dashboard.php';
         break;
+    
     case '/admin/employees':
         break;
 
     case '/admin/stats':
         break;
+    
+    case '/logout':
+        // Vider toutes les données de session
+        $_SESSION = [];
+        // Détruire le cookie de session
+        if (isset($_COOKIE[session_name()])) {
+            setcookie(session_name(), '', time() - 3600, '/');
+        }
+        // Détruire la session
+        session_destroy();
+        header('Location: /');
+        exit();
+        break;   
     
     // Page non trouvée
     default:
