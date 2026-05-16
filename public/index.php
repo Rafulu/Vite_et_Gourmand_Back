@@ -1,7 +1,5 @@
 <?php
 
-session_start();
-
 //Empêcher l'accès direct aux infos PHP
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
@@ -12,6 +10,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
+session_start();
 
 //Récupère le chemin de l'URL pour savoir où aller
 $url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -166,9 +165,13 @@ switch($url) {
             require_once '../src/views/client/login.php';
         }
         if ($method === 'POST') {
-            $data = json_decode(file_get_contents('php://input'), true);
-            $result = $auth->login($data['email'], $data['password']);
-            echo json_encode($result);
+            $result = $auth->login($_POST['email'], $_POST['password']);
+            if (isset($result['success'])) {
+                header('Location: /account');
+                exit();
+            }
+            $error = $result['error'] ?? null;
+            require_once '../src/views/client/login.php';
         }
         break;
 
