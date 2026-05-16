@@ -200,7 +200,7 @@ switch($url) {
     // Espace Client - Utilisateur connecté
     case '/account':
         SecurityHelper::requireLogin();
-         echo json_encode(['message' => 'Espace client', 'user_id' => $_SESSION['user_id']]);
+        require_once '../src/views/client/account.php';
         break;
 
     // Espace Employé

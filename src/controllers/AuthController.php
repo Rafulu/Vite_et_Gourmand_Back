@@ -25,6 +25,8 @@ class AuthController {
         //Stockage des informations en session
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['role_id'] = $user['role_id'];
+        $_SESSION['first_name'] = $user['first_name'];
+        $_SESSION['email'] = $user['email'];
 
         return ['success' => true, 'session_id' => session_id(), 'role_id' => $user['role_id']];
     }
