@@ -176,12 +176,44 @@ switch($url) {
         break;
 
     case '/register':
-        if ($method === 'POST') {
-            $data = json_decode(file_get_contents('php://input'), true);
-            $data['role_id'] = 5;
-            $result = $auth->register($data);
-            echo json_encode($result);
+        if ($method === 'GET') {
+            require_once '../src/views/client/register.php';
         }
+        if ($method === 'POST') {
+            $data = $_POST;
+            $data['role_id'] = 5;
+
+            // Début de la transaction (groupe d'opérations SQL lié entre elle. Succès commun ou échec commun. Pas de succès partiel si échec partiel)
+            $pdo->beginTransaction();
+
+            try {
+                $result = $auth->register($data);
+                if (isset($result['success'])) {
+                    $_SESSION['user_id'] = $result['user_id'];
+                    $addressData = [
+                        'name' => 'Domicile',
+                        'number' => $_POST['number'] ?? null,
+                        'street' => $_POST['street'],
+                        'complement' => $_POST['complement'] ?? null,
+                        'postal_code' => $_POST['postal_code'],
+                        'city' => $_POST['city'],
+                        'country' => 'France'
+                    ];
+                    $address->create($addressData);
+                    $pdo->commit();
+                    header('Location: /login');
+                    exit();
+                }
+                $pdo->rollBack();
+                $error = $result['error'] ?? null;
+                require_once '../src/views/client/register.php';
+            } catch (Exeption $e) {
+                $pdo->rollback();
+                $error = 'Une erreur est survenue, veuillez réessayer';
+                require_once '../src/views/client/register.php';
+            }
+        }    
+        break;
         
     case '/forgot-password':
         if ($method === 'GET') {

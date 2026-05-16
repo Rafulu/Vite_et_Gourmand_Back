@@ -45,7 +45,7 @@ class AuthController {
 
         // Valider mot de passe
         if (!SecurityHelper::validatePassword($data['password'])) {
-            return ['error' => 'Une erreur est survenue, vérifiez vos informations'];
+            return ['error' => 'Le mot de passe doit contenir au moins 14 caractères, 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial'];
         }
 
         //traitement inscription
@@ -54,7 +54,7 @@ class AuthController {
         //vérifier si l'email existe déjà
         $existingUser = $userModel->findByEmail($data['email']);
         if ($existingUser) {
-            return ['error' => 'Une erreur est survenue, vérifiez vos informations'];
+            return ['error' => 'Un problème est survenu, veuillez vous connecter ou réinitialiser votre mot de passe'];
         }
 
         // Hasher le mot de passe
@@ -62,8 +62,9 @@ class AuthController {
 
         // Créer l'Utilisateur
         $userModel->create($data);
+        $userId = $this->pdo->lastInsertId();
 
-        return ['success' => true];
+        return ['success' => true, 'user_id' => $userId];
     }
 
     public function forgotPassword($email) {
