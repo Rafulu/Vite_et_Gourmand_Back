@@ -1,4 +1,5 @@
 <?php
+ob_start();
 
 //Empêcher l'accès direct aux infos PHP
 header('X-Content-Type-Options: nosniff');
@@ -114,7 +115,16 @@ switch($url) {
         if ($method === 'GET') {
             $filters = [];
             $menus = $menu->getWithFilters($filters);
+            $themes = $pdo->query("SELECT * FROM themes")->fetchALL(PDO::FETCH_ASSOC);
             require_once '../src/views/menus.php';
+        }
+        if ($method === 'POST') {
+            $filters = json_decode(file_get_contents('php://input'), true) ?? [];
+            $menus = $menu->getWithFilters($filters);
+            ob_end_clean();
+            header('Content-Type: application/json');
+            echo json_encode($menus);
+            exit();
         }
         break;
 

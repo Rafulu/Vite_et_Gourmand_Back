@@ -13,7 +13,8 @@ class MenuModel {
         return "
             SELECT m.*, t.name as theme_name,
             GROUP_CONCAT(DISTINCT a.name) as allergens,
-            GROUP_CONCAT(DISTINCT a.icon) as allergen_icons
+            GROUP_CONCAT(DISTINCT a.icon) as allergen_icons,
+            GROUP_CONCAT(DISTINCT d.diet) as diets
             FROM menus m
             LEFT JOIN themes t ON m.theme_id = t.id
             LEFT JOIN composition_menu cm ON m.id = cm.menu_id
@@ -46,30 +47,35 @@ class MenuModel {
     public function findWithFilters($filters) {
         $sql = $this->baseQuery();
         $params = [];
+        $having = [];
 
         if (!empty($filters['theme_id'])) {
-            $sql .= " AND theme_id = :theme_id";
+            $having[]= "m.theme_id = :theme_id";
             $params[':theme_id'] = $filters['theme_id'];
         }
 
         if (!empty($filters['min_price'])) {
-            $sql .= " AND price_per_person >= :min_price";
+            $having[] = "m.price_per_person >= :min_price";
             $params[':min_price'] = $filters['min_price'];
         }
 
         if (!empty($filters['max_price'])) {
-            $sql .= " AND price_per_person <= :max_price";
+            $having[] = "m.price_per_person <= :max_price";
             $params[':max_price'] = $filters['max_price'];
         }
 
         if (!empty($filters['min_guests'])) {
-            $sql .= " AND min_guests <= :min_guests";
+            $having[] = "m.min_guests <= :min_guests";
             $params[':min_guests'] = $filters['min_guests'];
         }
 
         if (!empty($filters['diet'])) {
-            $sql .= "AND id IN (SELECT menu_id FROM composition_menu cm JOIN dishes d ON cm.dish_id = d.id WHERE d.diet = :diet)";
+            $sql .= " AND m.id IN (SELECT cm.menu_id FROM composition_menu cm JOIN dishes d ON cm.dish_id = d.id WHERE d.diet = :diet)";
             $params[':diet'] = $filters['diet'];
+        }
+
+        if (!empty($having)) {
+            $sql .= " HAVING " . implode( " AND ", $having);
         }
 
         $stmt = $this->pdo->prepare($sql);

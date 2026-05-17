@@ -21,15 +21,15 @@
                     <div class="row g-3">
                         <div class="col-6 col-md-3">
                             <label class="form-label">Prix minimum</label>
-                            <input type="number" class="form-control" id="min_price" placeholder="0">
+                            <input type="number" class="form-control" id="min_price" placeholder="Min">
                         </div>
                         <div class="col-6 col-md-3">
                             <label class="form-label">Prix maximum</label>
-                            <input type="number" class="form-control" id="max_price" placeholder="100">
+                            <input type="number" class="form-control" id="max_price" placeholder="Max">
                         </div>
                         <div class="col-6 col-md-3">
                             <label class="form-label">Nombre de personnes</label>
-                            <input type="number" class="form-control" id="min_guests" placeholder="10">
+                            <input type="number" class="form-control" id="min_guests" placeholder="Min">
                         </div>
                         <div class="col-6 col-md-3">
                             <label class="form-label">Régime</label>
@@ -38,6 +38,17 @@
                                 <option value="VEGAN">Vegan</option>
                                 <option value="VEGETARIEN">Végétarien</option>
                                 <option value="CLASSIQUE">Classique</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label for="theme_id" class="form-label">Thème</label>
+                            <select class="form-select" id="theme_id">
+                                <option value="">Tous</option>
+                                <?php foreach ($themes as $theme): ?>
+                                    <option value="<?php echo $theme['id']; ?>">
+                                        <?php echo htmlspecialchars($theme['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -89,7 +100,6 @@
 
     <?php require_once __DIR__ . '/partials/footer.php'; ?>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/assets/js/main.js"></script>
+    <?php require_once __DIR__ . '/../partials/scripts.php'; ?>
 </body>
 </html>
