@@ -60,7 +60,7 @@ function afficherMenus(menus) {
     });
 }
 
-    // Initialisation du slider de prix
+   // Initialisation du slider de prix
     const priceSlider = document.getElementById('price-slider');
 
     if (priceSlider) {
@@ -68,16 +68,25 @@ function afficherMenus(menus) {
             start: [0, 200],
             connect: true,
             step: 1,
-            range: {
-                'min': 0,
-                'max': 200
-            }
+            range: { 'min': 0, 'max': 200 }
         });
 
-        priceSlider.noUiSlider.on('update', (values) => {
-                document.getElementById('min_price').value = Math.round(values[0]);
-                document.getElementById('max_price').value = Math.round(values[1]);
-                document.getElementById('price-display').textContent =
-                    Math.round(values[0]) + '€ - ' + Math.round(values[1]) + '€';
-            });
+        // Mise à jour des inputs et du texte quand le slider bouge
+        priceSlider.noUiSlider.on('update', function(values) {
+            document.getElementById('min_price').value = Math.round(values[0]);
+            document.getElementById('max_price').value = Math.round(values[1]);
+            document.getElementById('min_price_input').value = Math.round(values[0]);
+            document.getElementById('max_price_input').value = Math.round(values[1]);
+            document.getElementById('price-display').textContent = 
+                Math.round(values[0]) + '€ - ' + Math.round(values[1]) + '€';
+        });
+
+        // Mise à jour du slider quand on tape dans les inputs
+        document.getElementById('min_price_input').addEventListener('change', function() {
+            priceSlider.noUiSlider.set([this.value, null]);
+        });
+
+        document.getElementById('max_price_input').addEventListener('change', function() {
+            priceSlider.noUiSlider.set([null, this.value]);
+        });
     }

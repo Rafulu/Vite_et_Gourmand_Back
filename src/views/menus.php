@@ -21,7 +21,11 @@
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
                             <label class="form-label">Fourchette de prix : <span id="price-display">0€ - 200€</span></label>
-                            <div id="price-slider" class="mt-2"></div>
+                            <div id="price-slider" class="mt-2 mb-2"></div>
+                            <div class="d-flex gap-2 mt-2">
+                                <input type="number" id="min_price_input" class="form-control form-control-sm" placeholder="Min" min="0" max="200">
+                                <input type="number" id="max_price_input" class="form-control form-control-sm" placeholder="Max" min="0" max="200">
+                            </div>
                             <input type="hidden" id="min_price" value="0">
                             <input type="hidden" id="max_price" value="200">
                         </div>
