@@ -19,13 +19,11 @@
             <div class="col-12">
                 <div class="card p-3">
                     <div class="row g-3">
-                        <div class="col-6 col-md-3">
-                            <label class="form-label">Prix minimum</label>
-                            <input type="number" class="form-control" id="min_price" placeholder="Min">
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <label class="form-label">Prix maximum</label>
-                            <input type="number" class="form-control" id="max_price" placeholder="Max">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Fourchette de prix : <span id="price-display">0€ - 200€</span></label>
+                            <div id="price-slider" class="mt-2"></div>
+                            <input type="hidden" id="min_price" value="0">
+                            <input type="hidden" id="max_price" value="200">
                         </div>
                         <div class="col-6 col-md-3">
                             <label class="form-label">Nombre de personnes</label>
@@ -100,6 +98,6 @@
 
     <?php require_once __DIR__ . '/partials/footer.php'; ?>
 
-    <?php require_once __DIR__ . '/../partials/scripts.php'; ?>
+    <?php require_once __DIR__ . '/partials/scripts.php'; ?>
 </body>
 </html>

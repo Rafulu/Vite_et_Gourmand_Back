@@ -59,3 +59,25 @@ function afficherMenus(menus) {
         `;
     });
 }
+
+    // Initialisation du slider de prix
+    const priceSlider = document.getElementById('price-slider');
+
+    if (priceSlider) {
+        noUiSlider.create(priceSlider, {
+            start: [0, 200],
+            connect: true,
+            step: 1,
+            range: {
+                'min': 0,
+                'max': 200
+            }
+        });
+
+        priceSlider.noUiSlider.on('update', (values) => {
+                document.getElementById('min_price').value = Math.round(values[0]);
+                document.getElementById('max_price').value = Math.round(values[1]);
+                document.getElementById('price-display').textContent =
+                    Math.round(values[0]) + '€ - ' + Math.round(values[1]) + '€';
+            });
+    }
