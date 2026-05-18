@@ -90,3 +90,68 @@ function afficherMenus(menus) {
             priceSlider.noUiSlider.set([null, this.value]);
         });
     }
+
+    // Calcul des prix pour le formulaire de commande
+    const guestInput = document.getElementById('guest_count');
+    const addressSelect = document.getElementById('delivery_address_id');
+
+    if (guestInput) {
+    
+        const pricePerPerson = parseFloat(document.querySelector('[name="menu_price_per_person"]').value);
+        const minGuests = parseInt(document.querySelector('[name="min_guests"]').value);
+
+        function calculerPrix() {
+            const guests = parseInt(guestInput.value) || 0;
+            const city = addressSelect.options[addressSelect.selectedIndex]?.dataset.city || '';
+        
+            if (guests < minGuests) return;
+
+            // Prix menu
+            let menuPrice = pricePerPerson * guests;
+        
+            // Réduction 10% si guests >= min_guests + 5
+            let discount = 0;
+            if (guests >= minGuests + 5) {
+                discount = menuPrice * 0.10;
+                menuPrice = menuPrice - discount;
+                document.getElementById('recap-discount-row').classList.remove('d-none');
+                document.getElementById('recap-discount').textContent = '-' + discount.toFixed(2) + '€';
+                document.getElementById('discount_hidden').value = 1;
+            } else {
+                document.getElementById('recap-discount-row').classList.add('d-none');
+                document.getElementById('discount_hidden').value = 0;
+            }
+
+            // Frais livraison
+            let deliveryPrice = 0;
+            if (city.toLowerCase() !== 'bordeaux') {
+                deliveryPrice = 5;
+                // On mettra le calcul km plus tard
+            }
+
+            // Total
+            const total = menuPrice + deliveryPrice;
+
+            // Affichage
+            document.getElementById('recap-guests').textContent = guests + ' personnes';
+            document.getElementById('recap-menu-price').textContent = menuPrice.toFixed(2) + '€';
+            document.getElementById('recap-delivery').textContent = deliveryPrice === 0 ? 'Gratuit' : deliveryPrice.toFixed(2) + '€';
+            document.getElementById('recap-total').textContent = total.toFixed(2) + '€';
+
+            // Valeurs cachées pour le formulaire
+            document.getElementById('total_price').value = total.toFixed(2);
+            document.getElementById('menu_price_hidden').value = menuPrice.toFixed(2);
+            document.getElementById('delivery_price_hidden').value = deliveryPrice.toFixed(2);
+        }
+
+        guestInput.addEventListener('input', calculerPrix);
+        addressSelect.addEventListener('change', calculerPrix);
+    }
+
+    // Afficher/cacher adresse facturation
+    const sameAddress = document.getElementById('same_address');
+    if (sameAddress) {
+        sameAddress.addEventListener('change', function() {
+            document.getElementById('billing-block').classList.toggle('d-none', this.checked);
+        });
+    }

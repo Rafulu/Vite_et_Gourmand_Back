@@ -85,17 +85,22 @@ if (preg_match('/^\/dishes\/(\d+)$/', $url, $matches)) {
     exit();
 }
 
-// Routes dynamiques commandes
-if (preg_match('/^\/orders\/(\d+)$/', $url, $matches)) {
+if (preg_match('/^\/order\/(\d+)$/', $url, $matches)) {
     SecurityHelper::requireLogin();
     $id = $matches[1];
-    if ($method === 'GET') {
-        echo json_encode($order->getById($id));
-    }
-    if ($method === 'PUT') {
-        $data = json_decode(file_get_contents('php://input'), true);
-        echo json_encode($order->updateStatus($id, $data));
-    }
+    $menuModel = new MenuModel($pdo);
+    $menu = $menuModel->findById($id);
+    $addressModel = new AddressModel($pdo);
+    $addresses = $addressModel->findByUserId($_SESSION['user_id']);
+    // Récupère les conditions du menu
+    $conditions = $pdo->prepare("
+        SELECT c.* FROM conditions c
+        JOIN condition_menu cm ON c.id = cm.condition_id
+        WHERE cm.menu_id = :menu_id
+    ");
+    $conditions->execute([':menu_id' => $id]);
+    $conditions = $conditions->fetchAll(PDO::FETCH_ASSOC);
+    require_once '../src/views/client/order-form.php';
     exit();
 }
 
@@ -152,8 +157,21 @@ switch($url) {
             echo json_encode($order->getMyOrders());
         }
         if ($method === 'POST') {
-            $data = json_decode(file_get_contents('php://input'), true);
-            echo json_encode($order->create($data));
+            $data = $_POST;
+            $data['user_id'] = $_SESSION['user_id'];
+
+            //Générer un numéro de commande unique
+            $data['order_number'] = 'VG-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+
+            $result = $order->create($data);
+            if (isset($result['success'])) {
+                header('Location: /orders/' . $result['id']);
+                exit();
+            }
+            $error = $result['error'] ?? 'Une erreur est survenue';
+            $menu = (new MenuModel($pdo))->findById($_POST['menu_id']);
+            $addresses = (new AddressModel($pdo))->findByUserId($_SESSION['user_id']);
+            require_once '../src/views/client/order-form.php';
         }
         break;
     
