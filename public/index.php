@@ -56,8 +56,16 @@ $address = new AddressController($pdo);
 // Gestion des routes dynamiques pour les menus 
 if (preg_match('/^\/menus\/(\d+)$/', $url, $matches)) {
     $id = $matches[1];
-    $result = $menu->getById($id);
-    echo json_encode($result);
+    $menuModel = new MenuModel($pdo);
+    $menuData = $menuModel->findById($id);
+    if (!$menuData) {
+        http_response_code(404);
+        echo "Menu non trouvé";
+        exit();
+    }
+    $menu = $menuData;
+    $dishes = $menuModel->findDishesByMenuId($id);
+    require_once '../src/views/menu-detail.php';
     exit();
 }
 

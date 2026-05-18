@@ -35,9 +35,8 @@ class MenuModel {
 
     // Récupère un menu par son id
     public function findById($id) {
-        $stmt = $this->pdo->prepare("
-            SELECT * FROM menus WHERE id = :id AND is_active = 1
-        ");
+        $sql = $this->baseQuery() . " AND m.id = :id";
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -80,6 +79,18 @@ class MenuModel {
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Récupère les plats d'un menu
+    public function findDishesByMenuId($menu_id) {
+        $stmt = $this->pdo->prepare("
+            SELECT d.* FROM dishes d
+            JOIN composition_menu cm ON d.id = cm.dish_id
+            WHERE cm.menu_id = :menu_id
+            AND d.is_active = 1
+        ");
+        $stmt->execute([':menu_id' => $menu_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
