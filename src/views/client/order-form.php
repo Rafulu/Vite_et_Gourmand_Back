@@ -27,35 +27,30 @@
             <!-- Étape 1 : Informations client -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <h2 class="h5">Étape 1 : Vos informations</h2>
+                    <h2 class="h5">Vos informations</h2>
                     <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Prénom</label>
-                            <input type="text" class="form-control" value="<?php echo htmlspecialchars($_SESSION['first_name'] ?? ''); ?>" readonly>
+                        <div class="col">
+                            <input type="text" class="form-control" value="<?php echo htmlspecialchars($_SESSION['first_name'] ?? ''); ?>" placeholder="Prénom" aria-label="Prénom">
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Nom</label>
-                            <input type="text" class="form-control" value="<?php echo htmlspecialchars($_SESSION['last_name'] ?? ''); ?>" readonly>
+                        <div class="col">
+                            <input type="text" class="form-control" value="<?php echo htmlspecialchars($_SESSION['last_name'] ?? ''); ?>" placeholder="Nom" aria-label="Nom">
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" value="<?php echo htmlspecialchars($_SESSION['email'] ?? ''); ?>" readonly>
+                        <div class="col">
+                            <input type="email" class="form-control" value="<?php echo htmlspecialchars($_SESSION['email'] ?? ''); ?>" placeholder="email" aria-label="Email">
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Téléphone</label>
-                            <input type="tel" class="form-control" value="<?php echo htmlspecialchars($_SESSION['phone'] ?? ''); ?>" readonly>
+                        <div class="col">
+                            <input type="tel" class="form-control" value="<?php echo htmlspecialchars($_SESSION['phone'] ?? ''); ?>" placeholder="Téléphone" arial-label="Téléphone">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Étape 2 : Date et lieu -->
+            <!-- Date et lieu -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <h2 class="h5">Étape 2 : Date et lieu de livraison</h2>
+                    <h2 class="h5">Date et lieu de livraison</h2>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="delivery_date" class="form-label">Date et heure de livraison</label>
                             <input type="datetime-local" class="form-control" id="delivery_date" name="delivery_date" required aria-required="true">
                         </div>
                         <div class="col-md-6 mb-3">
@@ -68,7 +63,19 @@
                                         <?php echo htmlspecialchars($addr['name'] . ' - ' . $addr['number'] . ' ' . $addr['street'] . ', ' . $addr['postal_code'] . ' ' . $addr['city']); ?>
                                     </option>
                                 <?php endforeach; ?>
+
+                                <option value="new">+ Ajouter une nouvelle adresse</option>
                             </select>
+                            <!-- Formulaire caché pour une nouvelle adresse -->
+                            <div id="new-delivery-address" class="d-none mt-3">
+                                <h6>Nouvelle adresse de livraison</h6>
+
+                                <input type="text" class="form-control mb-2" name="new_delivery_name" placeholder="Nom de l'adresse">
+                                <input type="text" class="form-control mb-2" name="new_delivery_number" placeholder="Numéro">
+                                <input type="text" class="form-control mb-2" name="new_delivery_street" placeholder="Rue">
+                                <input type="text" class="form-control mb-2" name="new_delivery_postal" placeholder="Code postal">
+                                <input type="text" class="form-control mb-2" name="new_delivery_city" placeholder="Ville">
+                            </div>
                         </div>
 
                         <!-- Adresse facturation -->
@@ -89,16 +96,26 @@
                                         <?php echo htmlspecialchars($addr['name'] . ' - ' . $addr['street'] . ', ' . $addr['city']); ?>
                                     </option>
                                 <?php endforeach; ?>
+
+                                <option value="new">+ Ajouter une nouvelle adresse</option>
                             </select>
+                            <div id="new-billing-address" class="d-none mt-3">
+                                <h6>Nouvelle adresse de facturation</h6>
+                                <input type="text" class="form-control mb-2" name="new_billing_name" placeholder="Nom de l'adresse">
+                                <input type="text" class="form-control mb-2" name="new_billing_number" placeholder="Numéro">
+                                <input type="text" class="form-control mb-2" name="new_billing_street" placeholder="Rue">
+                                <input type="text" class="form-control mb-2" name="new_billing_postal" placeholder="Code postal">
+                                <input type="text" class="form-control mb-2" name="new_billing_city" placeholder="Ville">
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Étape 3 : Nombre de personnes -->
+            <!-- Nombre de personnes -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <h2 class="h5">Étape 3 : Nombre de personnes</h2>
+                    <h2 class="h5">Nombre de personnes</h2>
                     <p class="text-muted">Minimum requis : <strong><?php echo $menu['min_guests']; ?> personnes</strong></p>
                     <p class="text-muted">Réduction de 10% à partir de <strong><?php echo $menu['min_guests'] + 5; ?> personnes</strong></p>
                     <div class="col-md-4">
@@ -109,7 +126,7 @@
                 </div>
             </div>
 
-            <!-- Étape 4 : Conditions du menu -->
+            <!--  Conditions du menu -->
             <?php if (!empty($conditions)): ?>
             <div class="card mb-4">
                 <div class="card-body">
@@ -129,7 +146,16 @@
             </div>
             <?php endif; ?>
 
-            <!-- Étape 5 : Récapitulatif prix -->
+            <!-- Informations complémentaires -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="h5">Informations complémentaires</h2>
+                    <label for="detail" class="form-label">Précisions sur votre commande</label>
+                    <textarea class="form-control" id="detail" name="detail" rows="3"></textarea>
+                </div>
+            </div>
+
+            <!-- Récapitulatif prix -->
             <div class="card mb-4">
                 <div class="card-body">
                     <h2 class="h5">Récapitulatif du prix</h2>
@@ -166,16 +192,7 @@
                 </div>
             </div>
 
-            <!-- Informations complémentaires -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h2 class="h5">Informations complémentaires</h2>
-                    <label for="detail" class="form-label">Précisions sur votre commande</label>
-                    <textarea class="form-control" id="detail" name="detail" rows="3"></textarea>
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">Valider la commande</button>
+            <button type="submit" class="position-absolute bottom-10 start-50 translate-middle btn btn-primary w-80">Valider la commande</button>
         </form>
     </main>
 

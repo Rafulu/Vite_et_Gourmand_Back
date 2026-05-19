@@ -85,22 +85,23 @@ if (preg_match('/^\/dishes\/(\d+)$/', $url, $matches)) {
     exit();
 }
 
-if (preg_match('/^\/order\/(\d+)$/', $url, $matches)) {
+if (preg_match('/^\/orders\/(\d+)$/', $url, $matches)) {
     SecurityHelper::requireLogin();
     $id = $matches[1];
-    $menuModel = new MenuModel($pdo);
-    $menu = $menuModel->findById($id);
-    $addressModel = new AddressModel($pdo);
-    $addresses = $addressModel->findByUserId($_SESSION['user_id']);
-    // Récupère les conditions du menu
-    $conditions = $pdo->prepare("
-        SELECT c.* FROM conditions c
-        JOIN condition_menu cm ON c.id = cm.condition_id
-        WHERE cm.menu_id = :menu_id
-    ");
-    $conditions->execute([':menu_id' => $id]);
-    $conditions = $conditions->fetchAll(PDO::FETCH_ASSOC);
-    require_once '../src/views/client/order-form.php';
+    $orderData = $order->getById($id);
+    if (isset($orderData['error'])) {
+        http_response_code(404);
+        echo "Commande non trouvée";
+        exit();
+    }
+    // Vérifier que la commande appartient à l'utilisateur connecté
+    if ($orderData['user_id'] != $_SESSION['user_id']) {
+        http_response_code(403);
+        echo "Accès non autorisé";
+        exit();
+    }
+    $menuData = (new MenuModel($pdo))->findById($orderData['menu_id']);
+    require_once '../src/views/client/order-confirmation.php';
     exit();
 }
 
@@ -157,21 +158,116 @@ switch($url) {
             echo json_encode($order->getMyOrders());
         }
         if ($method === 'POST') {
-            $data = $_POST;
-            $data['user_id'] = $_SESSION['user_id'];
+            SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
 
-            //Générer un numéro de commande unique
-            $data['order_number'] = 'VG-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+            $errors = [];
 
-            $result = $order->create($data);
-            if (isset($result['success'])) {
-                header('Location: /orders/' . $result['id']);
-                exit();
-            }
-            $error = $result['error'] ?? 'Une erreur est survenue';
-            $menu = (new MenuModel($pdo))->findById($_POST['menu_id']);
+            $menu_id             = filter_var($_POST['menu_id'] ?? '', FILTER_VALIDATE_INT);
+            $delivery_address_id = $_POST['delivery_address_id'] ?? '';
+            $billing_address_id  = $_POST['billing_address_id'] ?? '';
+            $delivery_date       = SecurityHelper::sanitize($_POST['delivery_date'] ?? '');
+            $guest_count         = filter_var($_POST['guest_count'] ?? '', FILTER_VALIDATE_INT);
+            $total_price         = filter_var($_POST['total_price'] ?? '', FILTER_VALIDATE_FLOAT);
+            $detail              = SecurityHelper::sanitize($_POST['detail'] ?? '');
+            $accept_conditions   = isset($_POST['accept_conditions']);
+
+            if (!$menu_id)                                              $errors[] = 'Menu invalide.';
+            if (!$delivery_address_id)                                  $errors[] = 'Adresse de livraison invalide.';
+            if (!$delivery_date || strtotime($delivery_date) <= time()) $errors[] = 'Date de livraison invalide.';
+            if (!$guest_count || $guest_count < 1)                      $errors[] = 'Nombre de personnes invalide.';
+            if (!$total_price || $total_price <= 0)                     $errors[] = 'Prix total invalide.';
+            if (!$accept_conditions)                                    $errors[] = 'Vous devez accepter les conditions.';
+
             $addresses = (new AddressModel($pdo))->findByUserId($_SESSION['user_id']);
-            require_once '../src/views/client/order-form.php';
+            $validIds  = array_column($addresses, 'id');
+
+            $pdo->beginTransaction();
+
+            try {
+                // Nouvelle adresse de livraison
+                if ($delivery_address_id === 'new') {
+                    $newAddr = [
+                        'name'        => SecurityHelper::sanitize($_POST['new_delivery_name'] ?? ''),
+                        'number'      => SecurityHelper::sanitize($_POST['new_delivery_number'] ?? ''),
+                        'street'      => SecurityHelper::sanitize($_POST['new_delivery_street'] ?? ''),
+                        'postal_code' => SecurityHelper::sanitize($_POST['new_delivery_postal'] ?? ''),
+                        'city'        => SecurityHelper::sanitize($_POST['new_delivery_city'] ?? ''),
+                        'country'     => 'France',
+                    ];
+                    if (!$newAddr['name'] || !$newAddr['number'] || !$newAddr['street'] || !$newAddr['postal_code'] || !$newAddr['city']) {
+                        $errors[] = 'Tous les champs de la nouvelle adresse de livraison sont obligatoires.';
+                    } else {
+                        $newAddrResult       = $address->create($newAddr);
+                        $delivery_address_id = $newAddrResult['id'] ?? null;
+                        if (!$delivery_address_id) $errors[] = 'Erreur lors de la création de l\'adresse de livraison.';
+                    }
+                } else {
+                    $delivery_address_id = filter_var($delivery_address_id, FILTER_VALIDATE_INT);
+                    if (!in_array($delivery_address_id, $validIds)) $errors[] = 'Adresse de livraison non autorisée.';
+                }
+
+                // Nouvelle adresse de facturation
+                if ($billing_address_id === 'new') {
+                    $newBilling = [
+                        'name'        => SecurityHelper::sanitize($_POST['new_billing_name'] ?? ''),
+                        'number'      => SecurityHelper::sanitize($_POST['new_billing_number'] ?? ''),
+                        'street'      => SecurityHelper::sanitize($_POST['new_billing_street'] ?? ''),
+                        'postal_code' => SecurityHelper::sanitize($_POST['new_billing_postal'] ?? ''),
+                        'city'        => SecurityHelper::sanitize($_POST['new_billing_city'] ?? ''),
+                        'country'     => 'France',
+                    ];
+                    if (!$newBilling['name'] || !$newBilling['number'] || !$newBilling['street'] || !$newBilling['postal_code'] || !$newBilling['city']) {
+                        $errors[] = 'Tous les champs de la nouvelle adresse de facturation sont obligatoires.';
+                    } else {
+                        $newBillingResult   = $address->create($newBilling);
+                        $billing_address_id = $newBillingResult['id'] ?? null;
+                        if (!$billing_address_id) $errors[] = 'Erreur lors de la création de l\'adresse de facturation.';
+                    }
+                } elseif ($billing_address_id) {
+                    $billing_address_id = filter_var($billing_address_id, FILTER_VALIDATE_INT);
+                    if (!in_array($billing_address_id, $validIds)) $errors[] = 'Adresse de facturation non autorisée.';
+                } else {
+                    $billing_address_id = $delivery_address_id;
+                }
+
+                if (!empty($errors)) {
+                    $pdo->rollBack();
+                    $error = implode('<br>', $errors);
+                    $menu  = (new MenuModel($pdo))->findById($menu_id);
+                    require_once '../src/views/client/order-form.php';
+                    exit();
+                }
+
+                $data = [
+                    'user_id'             => $_SESSION['user_id'],
+                    'menu_id'             => $menu_id,
+                    'delivery_address_id' => $delivery_address_id,
+                    'billing_address_id'  => $billing_address_id,
+                    'delivery_date'       => $delivery_date,
+                    'guest_count'         => $guest_count,
+                    'total_price'         => $total_price,
+                    'detail'              => $detail,
+                    'order_number'        => 'VG-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6)),
+                ];
+
+                $result = $order->create($data);
+                if (isset($result['success'])) {
+                    $pdo->commit();
+                    header('Location: /orders/' . $result['id']);
+                    exit();
+                }
+            
+                $pdo->rollBack();
+                $error = $result['error'] ?? 'Une erreur est survenue';
+                $menu  = (new MenuModel($pdo))->findById($menu_id);
+                require_once '../src/views/client/order-form.php';
+
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                $error = 'Une erreur est survenue, veuillez réessayer.';
+                $menu  = (new MenuModel($pdo))->findById($menu_id);
+                require_once '../src/views/client/order-form.php';
+            }
         }
         break;
     

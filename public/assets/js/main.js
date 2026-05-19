@@ -24,41 +24,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Erreur:', error));
         });
     }
-});
-
-function afficherMenus(menus) {
-    const liste = document.getElementById('liste-menus');
-    liste.innerHTML = '';
-    
-    menus.forEach(m => {
-        liste.innerHTML += `
-            <div class="card mb-3">
-                <div class="row g-0">
-                    <div class="col-4">
-                        <img src="/assets/images/menu-default.jpg" 
-                             alt="${m.name}" 
-                             class="img-fluid rounded-start h-100" 
-                             style="object-fit: cover;">
-                    </div>
-                    <div class="col-8">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <h2 class="h5">${m.name} ${m.theme_name ? '- ' + m.theme_name : ''}</h2>
-                                <span class="fw-bold">${m.price_per_person}€/pers</span>
-                            </div>
-                            <p class="text-muted small">${m.description}</p>
-                            ${m.allergens ? `<p class="small">Allergènes : ${m.allergens}</p>` : ''}
-                            <div class="mt-2">
-                                <input type="date" class="form-control form-control-sm d-inline w-auto">
-                                <a href="/menus/${m.id}" class="btn btn-primary btn-sm ms-2">Détails</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-}
 
    // Initialisation du slider de prix
     const priceSlider = document.getElementById('price-slider');
@@ -148,10 +113,57 @@ function afficherMenus(menus) {
         addressSelect.addEventListener('change', calculerPrix);
     }
 
+    // Afficher formulaire caché de l'adresse de livraison
+    document.getElementById('delivery_address_id').addEventListener('change', function () {
+        document.getElementById('new-delivery-address').classList.toggle('d-none', this.value !== 'new');
+    });
+
     // Afficher/cacher adresse facturation
     const sameAddress = document.getElementById('same_address');
     if (sameAddress) {
         sameAddress.addEventListener('change', function() {
             document.getElementById('billing-block').classList.toggle('d-none', this.checked);
         });
+        const billingSelect = document.getElementById('billing_address_id');
+        if (billingSelect) {
+            billingSelect.addEventListener('change', function () {
+                document.getElementById('new-billing-address').classList.toggle('d-none', this.value !== 'new');
+            });
+        }
     }
+});
+
+
+function afficherMenus(menus) {
+    const liste = document.getElementById('liste-menus');
+    liste.innerHTML = '';
+    
+    menus.forEach(m => {
+        liste.innerHTML += `
+            <div class="card mb-3">
+                <div class="row g-0">
+                    <div class="col-4">
+                        <img src="/assets/images/menu-default.jpg" 
+                             alt="${m.name}" 
+                             class="img-fluid rounded-start h-100" 
+                             style="object-fit: cover;">
+                    </div>
+                    <div class="col-8">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <h2 class="h5">${m.name} ${m.theme_name ? '- ' + m.theme_name : ''}</h2>
+                                <span class="fw-bold">${m.price_per_person}€/pers</span>
+                            </div>
+                            <p class="text-muted small">${m.description}</p>
+                            ${m.allergens ? `<p class="small">Allergènes : ${m.allergens}</p>` : ''}
+                            <div class="mt-2">
+                                <input type="date" class="form-control form-control-sm d-inline w-auto">
+                                <a href="/menus/${m.id}" class="btn btn-primary btn-sm ms-2">Détails</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
