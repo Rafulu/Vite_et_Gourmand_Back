@@ -387,6 +387,12 @@ switch($url) {
         SecurityHelper::requireLogin();
         require_once '../src/views/client/account.php';
         break;
+    
+    case '/my-orders':
+    SecurityHelper::requireLogin();
+    $orders = $order->getMyOrders();
+    require_once '../src/views/client/my-orders.php';
+    break;
 
     // Espace Employé
     case '/employee':
