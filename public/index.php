@@ -85,6 +85,26 @@ if (preg_match('/^\/dishes\/(\d+)$/', $url, $matches)) {
     exit();
 }
 
+// Gestion des routes dynamiques pour les orders
+if (preg_match('/^\/order\/(\d+)$/', $url, $matches)) {
+    SecurityHelper::requireLogin();
+    $id = $matches[1];
+    $menuModel = new MenuModel($pdo);
+    $menu = $menuModel->findById($id);
+    $addressModel = new AddressModel($pdo);
+    $addresses = $addressModel->findByUserId($_SESSION['user_id']);
+    $conditions = $pdo->prepare("
+        SELECT c.* FROM conditions c
+        JOIN condition_menu cm ON c.id = cm.condition_id
+        WHERE cm.menu_id = :menu_id
+    ");
+    $conditions->execute([':menu_id' => $id]);
+    $conditions = $conditions->fetchAll(PDO::FETCH_ASSOC);
+    require_once '../src/views/client/order-form.php';
+    exit();
+}
+
+// Gestion des routes dynamiques pour les confirmation d'order
 if (preg_match('/^\/orders\/(\d+)$/', $url, $matches)) {
     SecurityHelper::requireLogin();
     $id = $matches[1];

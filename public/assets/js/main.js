@@ -130,6 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('new-billing-address').classList.toggle('d-none', this.value !== 'new');
             });
         }
+        
     }
 });
 
