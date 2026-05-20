@@ -30,9 +30,17 @@ class UserModel {
     }
 
     public function findById($id) {
-    $stmt = $this->pdo->prepare("SELECT * FROM users WHERE id = :id");
-    $stmt->execute([':id' => $id]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function findByRole($role_id) {
+        $stmt = $this->pdo->prepare("
+            SELECT id, first_name, last_name FROM users WHERE role_id = :role_id
+        ");
+        $stmt->execute([':role_id' => $role_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function update($id, $data) {

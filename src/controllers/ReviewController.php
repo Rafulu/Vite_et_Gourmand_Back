@@ -27,4 +27,21 @@ class ReviewController {
         $reviewModel = new ReviewModel($this->pdo);
         return $reviewModel->findByUserId($_SESSION['user_id']);
     }
+
+    public function getPending() {
+        $reviewModel = new ReviewModel($this->pdo);
+        return $reviewModel->findPending();
+    }
+
+    public function validate($id) {
+        $reviewModel = new ReviewModel($this->pdo);
+        $reviewModel->validate($id);
+        return ['success' => true];
+    }
+
+    public function reject($id) {
+        $reviewModel = new ReviewModel($this->pdo);
+        $reviewModel->reject($id);
+        return ['success' => true];
+    }
 }

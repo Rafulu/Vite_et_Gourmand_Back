@@ -139,6 +139,79 @@ if (preg_match('/^\/addresses\/(\d+)$/', $url, $matches)) {
     exit();
 }
 
+// Routes dynamiques pour le détail d'une commande coté employé
+if (preg_match('/^\/employee\/orders\/(\d+)$/', $url, $matches)) {
+    SecurityHelper::requireRole([1, 2, 3, 4, 6]);
+    $id = $matches[1];
+    $orderData = $order->getById($id);
+    if (!$orderData) {
+        http_response_code(404);
+        echo "Commande non trouvée";
+        exit();
+    }
+    $userModel = new UserModel($pdo);
+    $cooks = array_merge($userModel->findByRole(3), $userModel->findByRole(6));
+    $drivers = array_merge($userModel->findByRole(4), $userModel->findByRole(6));
+    $managers = array_merge($userModel->findByRole(1), $userModel->findByRole(2));
+    require_once '../src/views/employee/order-detail.php';
+    exit();
+}
+
+// Changement de statut
+if (preg_match('/^\/employee\/orders\/(\d+)\/status$/', $url, $matches)) {
+    SecurityHelper::requireRole([1, 2, 3, 4, 6]);
+    SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+    $id = $matches[1];
+    $result = $order->updateStatus($id, $_POST);
+    if (isset($result['success'])) {
+        header('Location: /employee/orders/' . $id);
+    } else {
+        header('Location: /employee/orders/' . $id . '?error=' . urlencode($result['error']));
+    }
+    exit();
+}
+
+// Attribution cuisinier/livreur
+if (preg_match('/^\/employee\/orders\/(\d+)\/assign$/', $url, $matches)) {
+    SecurityHelper::requireRole([1, 2, 6]);
+    SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+    $id = $matches[1];
+    $result = $order->assign($id, $_POST);
+    header('Location: /employee/orders/' . $id);
+    exit();
+}
+
+// Auto-attribution
+if (preg_match('/^\/employee\/orders\/(\d+)\/self-assign$/', $url, $matches)) {
+    SecurityHelper::requireRole([3, 4, 6]);
+    SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+    $id = $matches[1];
+    $result = $order->selfAssign($id, $_POST['role']);
+    header('Location: /employee/orders/' . $id);
+    exit();
+}
+
+// Commentaire interne
+if (preg_match('/^\/employee\/orders\/(\d+)\/comment$/', $url, $matches)) {
+    SecurityHelper::requireRole([1, 2, 3, 4, 6]);
+    SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+    $id = $matches[1];
+    $result = $order->addComment($id, $_POST['comment']);
+    header('Location: /employee/orders/' . $id);
+    exit();
+}
+
+// Gestion Avis client
+if (preg_match('/^\/employee\/reviews\/(\d+)\/(validate|reject)$/', $url, $matches)) {
+    SecurityHelper::requireRole([1, 2, 6]);
+    SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+    $id = $matches[1];
+    $action = $matches[2];
+    $review->$action($id);
+    header('Location: /employee/reviews');
+    exit();
+}
+
 switch($url) {
 
     //Pages publiques
@@ -422,13 +495,35 @@ switch($url) {
 
             // Espace Employé
     case '/employee':
-        SecurityHelper::requireRole(2);
-        require_once '../src/views/employee/dashboard.php';
+        SecurityHelper::requireRole([1, 2, 3, 4, 6]);
+        require_once '../src/views/employee/dashboard-employee.php';
         break;
 
     case '/employee/orders':
+        SecurityHelper::requireRole([1, 2, 3, 4, 6]);
+        $orders = $order->getALL();
+        $userModel = new UserModel($pdo);
+        $cooks = array_merge(
+            $userModel->findByRole(3),
+            $userModel->findByRole(6)
+        );
+        $drivers = array_merge(
+            $userModel->findByRole(4),
+            $userModel->findByRole(6)
+        );
+        $managers = array_merge(
+            $userModel->findByRole(1),
+            $userModel->findByRole(2)
+        );
+        require_once '../src/views/employee/orders-management.php';
         break;
-    
+
+    case '/employee/reviews':
+        SecurityHelper::requireRole([1, 2, 6]);
+        $reviews = $review->getPending();
+        require_once '../src/views/employee/reviews-management.php';
+        break;
+
     // Esapce admin
     case '/admin':
         SecurityHelper::requireRole(1);

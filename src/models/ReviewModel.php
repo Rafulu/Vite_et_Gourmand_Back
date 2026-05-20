@@ -47,4 +47,31 @@ class ReviewModel {
         $stmt->execute([':user_id' => $user_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function findPending() {
+        $stmt = $this->pdo->prepare("
+            SELECT r.*, u.first_name, u.last_name, o.order_number
+            FROM reviews r
+            JOIN users u ON r.user_id = u.id
+            JOIN orders o ON r.order_id = o.id
+            WHERE r.is_validated = 0
+            ORDER BY r.created_at DESC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function validate($id) {
+        $stmt = $this->pdo->prepare("
+            UPDATE reviews SET is_validated = 1 WHERE id = :id
+        ");
+        $stmt->execute([':id' => $id]);
+    }
+
+    public function reject($id) {
+        $stmt = $this->pdo->prepare("
+            DELETE FROM reviews WHERE id = :id
+        ");
+        $stmt->execute([':id' => $id]);
+    }
 }
