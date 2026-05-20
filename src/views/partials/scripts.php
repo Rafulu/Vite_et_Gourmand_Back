@@ -4,5 +4,8 @@
 <!-- noUiSlider JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
 
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <!-- Notre JS -->
 <script src="/assets/js/main.js"></script>

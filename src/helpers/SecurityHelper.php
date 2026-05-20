@@ -19,8 +19,8 @@ class SecurityHelper {
 
     public static function requireRole($role) {
         self::requireLogin();
-        $roles = is_array($roles) ? $roles : [$roles];
-        if (!in_array($_SESSION['role_id'], $role)) {
+        $roles = is_array($role) ? $role : [$role];
+        if (!in_array((int)$_SESSION['role_id'], $roles)) {
             header('Location: /');
             exit();
         }

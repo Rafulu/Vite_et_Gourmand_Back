@@ -1,4 +1,5 @@
 <?php
+
 ob_start();
 
 //Empêcher l'accès direct aux infos PHP
@@ -21,7 +22,9 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 
 // Config : Configuration de la connexion à la BDD
+require_once '../vendor/autoload.php';
 require_once '../config/database.php';
+require_once '../config/mongodb.php';
 
 // Models : Gestion des données de la BDD
 require_once '../src/models/UserModel.php';
@@ -42,6 +45,7 @@ require_once '../src/controllers/AddressController.php';
 
 // Helpers: Fonctions utilitaires de sécurité
 require_once '../src/helpers/SecurityHelper.php';
+require_once '../src/helpers/MongoDBHelper.php';
 
 
 // Création des objets en fonction de leur classes
@@ -572,6 +576,12 @@ switch($url) {
     break;
 
     case '/admin/stats':
+         SecurityHelper::requireLogin();
+        SecurityHelper::requireRole(1);
+        $mongoHelper = new MongoDBHelper();
+        $mongoHelper->syncFromMariaDB($pdo);
+        $stats = $mongoHelper->getStatsByMenu();
+        require_once '../src/views/admin/stats.php';
         break;
     
     case '/logout':
