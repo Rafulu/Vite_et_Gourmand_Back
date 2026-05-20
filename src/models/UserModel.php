@@ -29,6 +29,20 @@ class UserModel {
         ]); 
     }
 
+    public function createEmployee($data) {
+        $stmt = $this->pdo->prepare("
+            INSERT INTO users (first_name, last_name, email, password, role_id, is_blocked, created_at)
+            VALUES (:first_name, :last_name, :email, :password, :role_id, 0, NOW())
+        ");
+        $stmt->execute([
+            ':first_name' => $data['first_name'],
+            ':last_name'  => $data['last_name'],
+            ':email'      => $data['email'],
+            ':password'   => $data['password'],
+            ':role_id'    => $data['role_id']
+        ]);
+    }
+
     public function findById($id) {
         $stmt = $this->pdo->prepare("SELECT * FROM users WHERE id = :id");
         $stmt->execute([':id' => $id]);
@@ -56,5 +70,32 @@ class UserModel {
             ':phone'      => $data['phone'],
             ':id'         => $id
         ]);
+    }
+
+    public function findAllEmployees() {
+        $stmt = $this->pdo->prepare("
+            SELECT u.*, r.name as role_name
+            FROM users u
+            JOIN roles r ON u.role_id = r.id
+            WHERE u.role_id IN (2, 3, 4, 6)
+            ORDER BY u.last_name ASC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function toggleBlock($id) {
+        $stmt = $this->pdo->prepare("
+            UPDATE users SET is_blocked = IF(is_blocked = 1, 0, 1) WHERE id = :id
+        ");
+        $stmt->execute([':id' => $id]);
+    }
+
+    public function findAllRoles() {
+        $stmt = $this->pdo->prepare("
+            SELECT * FROM roles WHERE id IN (2, 3, 4, 6)
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

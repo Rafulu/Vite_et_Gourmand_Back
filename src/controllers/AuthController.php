@@ -112,4 +112,30 @@ class AuthController {
 
         return ['success' => true];
     }
+
+    public function createEmployee($data) {
+        $data['email']      = SecurityHelper::sanitize($data['email']);
+        $data['first_name'] = SecurityHelper::sanitize($data['first_name']);
+        $data['last_name']  = SecurityHelper::sanitize($data['last_name']);
+        $data['role_id']    = (int)$data['role_id'];
+
+        if (!SecurityHelper::validateEmail($data['email'])) {
+            return ['error' => 'Email invalide'];
+        }
+
+        $userModel = new UserModel($this->pdo);
+
+        if ($userModel->findByEmail($data['email'])) {
+            return ['error' => 'Cet email est déjà utilisé'];
+        }
+
+        $tempPassword = bin2hex(random_bytes(8));
+        $data['password'] = password_hash($tempPassword, PASSWORD_DEFAULT);
+
+        $userModel->createEmployee($data);
+
+        // TODO: envoyer email avec PHPMailer
+
+        return ['success' => true];
+    }
 }

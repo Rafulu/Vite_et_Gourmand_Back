@@ -212,6 +212,17 @@ if (preg_match('/^\/employee\/reviews\/(\d+)\/(validate|reject)$/', $url, $match
     exit();
 }
 
+// Route dynamiques gestion employés
+if (preg_match('/^\/admin\/employees\/(\d+)\/toggle$/', $url, $matches)) {
+    SecurityHelper::requireRole([1]);
+    SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+    $id = $matches[1];
+    $userModel = new UserModel($pdo);
+    $userModel->toggleBlock($id);
+    header('Location: /admin/employees');
+    exit();
+}
+
 switch($url) {
 
     //Pages publiques
@@ -527,11 +538,38 @@ switch($url) {
     // Esapce admin
     case '/admin':
         SecurityHelper::requireRole(1);
-        require_once '../src/views/admin/dashboard.php';
+        require_once '../src/views/admin/dashboard-admin.php';
         break;
     
     case '/admin/employees':
-        break;
+        SecurityHelper::requireRole([1]);
+        $userModel = new UserModel($pdo);
+        $employees = $userModel->findAllEmployees();
+        require_once '../src/views/admin/employees-management.php';
+    break;
+        
+
+    case '/admin/employees/create':
+    SecurityHelper::requireRole([1]);
+    if ($method === 'GET') {
+        $userModel = new UserModel($pdo);
+        $roles = $userModel->findAllRoles();
+        require_once '../src/views/admin/employee-create.php';
+    }
+    if ($method === 'POST') {
+        SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+        $result = $auth->createEmployee($_POST);
+        if (isset($result['success'])) {
+            header('Location: /admin/employees?success=1');
+        } else {
+            $error = $result['error'];
+            $userModel = new UserModel($pdo);
+            $roles = $userModel->findAllRoles();
+            require_once '../src/views/admin/employee-create.php';
+        }
+        exit();
+    }
+    break;
 
     case '/admin/stats':
         break;
