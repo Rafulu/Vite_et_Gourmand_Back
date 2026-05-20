@@ -34,4 +34,17 @@ class ReviewModel {
         ]);
         return $this->pdo->lastInsertId();
     }
+
+    // Lier les avis à un Utilisateur
+    public function findByUserId($user_id) {
+        $stmt = $this->pdo->prepare("
+            SELECT r.*, o.order_number
+            FROM reviews r
+            JOIN orders o ON r.order_id = o.id
+            WHERE r.user_id = :user_id
+            ORDER BY r.created_at DESC
+        ");
+        $stmt->execute([':user_id' => $user_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

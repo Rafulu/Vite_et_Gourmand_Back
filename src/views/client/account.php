@@ -32,7 +32,17 @@
                 <div class="card">
                     <div class="card-body">
                         <h2 class="card-title h5">Mes commandes</h2>
-                        <a href="/orders" class="btn btn-primary">Voir mes commandes</a>
+                        <a href="/my-orders" class="btn btn-primary">Voir mes commandes</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mes avis -->
+            <div class="col-12 col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title h5">Mes avis</h2>
+                        <a href="/my-reviews" class="btn btn-primary">Voir mes avis</a>
                     </div>
                 </div>
             </div>

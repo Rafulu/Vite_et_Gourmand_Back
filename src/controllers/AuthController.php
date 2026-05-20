@@ -93,4 +93,23 @@ class AuthController {
 
         return ['success' => true];
     }
+
+    public function updateProfile($id, $data) {
+        $data['first_name'] = SecurityHelper::sanitize($data['first_name']);
+        $data['last_name']  = SecurityHelper::sanitize($data['last_name']);
+        $data['email']      = SecurityHelper::sanitize($data['email']);
+        $data['phone']      = SecurityHelper::sanitize($data['phone']);
+
+        if (!SecurityHelper::validateEmail($data['email'])) {
+            return ['error' => 'Email invalide'];
+        }
+
+        $userModel = new UserModel($this->pdo);
+        $userModel->update($id, $data);
+
+        $_SESSION['first_name'] = $data['first_name'];
+        $_SESSION['email']      = $data['email'];
+
+        return ['success' => true];
+    }
 }

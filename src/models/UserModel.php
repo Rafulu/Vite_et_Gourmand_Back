@@ -28,4 +28,25 @@ class UserModel {
             ':role_id' => $data['role_id']
         ]); 
     }
+
+    public function findById($id) {
+    $stmt = $this->pdo->prepare("SELECT * FROM users WHERE id = :id");
+    $stmt->execute([':id' => $id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function update($id, $data) {
+        $stmt = $this->pdo->prepare("
+            UPDATE users 
+            SET first_name = :first_name, last_name = :last_name, email = :email, phone = :phone
+            WHERE id = :id
+        ");
+        $stmt->execute([
+            ':first_name' => $data['first_name'],
+            ':last_name'  => $data['last_name'],
+            ':email'      => $data['email'],
+            ':phone'      => $data['phone'],
+            ':id'         => $id
+        ]);
+    }
 }

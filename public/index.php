@@ -388,13 +388,39 @@ switch($url) {
         require_once '../src/views/client/account.php';
         break;
     
-    case '/my-orders':
+    case '/account/edit':
     SecurityHelper::requireLogin();
-    $orders = $order->getMyOrders();
-    require_once '../src/views/client/my-orders.php';
-    break;
+    if ($method === 'GET') {
+        $userModel = new UserModel($pdo);
+        $user = $userModel->findById($_SESSION['user_id']);
+        require_once '../src/views/client/account-edit.php';
+    }
+    if ($method === 'POST') {
+        SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+        $result = $auth->updateProfile($_SESSION['user_id'], $_POST);
+        if (isset($result['success'])) {
+            header('Location: /account');
+            exit();
+        }
+        $error = $result['error'] ?? null;
+        $user = $_POST;
+        require_once '../src/views/client/account-edit.php';
+    }
+    break;    
+    
+    case '/my-orders':
+        SecurityHelper::requireLogin();
+        $orders = $order->getMyOrders();
+        require_once '../src/views/client/my-orders.php';
+        break;
 
-    // Espace Employé
+    case '/my-reviews':
+        SecurityHelper::requireLogin();
+        $reviews = $review->getMyReviews();
+        require_once '../src/views/client/my-reviews.php';
+        break;
+
+            // Espace Employé
     case '/employee':
         SecurityHelper::requireRole(2);
         require_once '../src/views/employee/dashboard.php';

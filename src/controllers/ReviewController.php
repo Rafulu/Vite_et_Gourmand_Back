@@ -21,4 +21,10 @@ class ReviewController {
         $id = $reviewModel->create($data);
         return ['success' => true, 'id' => $id];
     }
+
+    // Récupérer les avis par User
+    public function getMyReviews() {
+        $reviewModel = new ReviewModel($this->pdo);
+        return $reviewModel->findByUserId($_SESSION['user_id']);
+    }
 }
