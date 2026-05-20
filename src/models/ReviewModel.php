@@ -74,4 +74,35 @@ class ReviewModel {
         ");
         $stmt->execute([':id' => $id]);
     }
+
+    public function findByOrderId($order_id) {
+        $stmt = $this->pdo->prepare("
+            SELECT * FROM reviews WHERE order_id = :order_id
+        ");
+        $stmt->execute([':order_id' => $order_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function findEligibleOrder($order_id, $user_id) {
+        $stmt = $this->pdo->prepare("
+            SELECT * FROM orders 
+            WHERE id = :order_id 
+            AND user_id = :user_id 
+            AND status = 'TERMINEE'
+        ");
+        $stmt->execute([':order_id' => $order_id, ':user_id' => $user_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    public function findEligibleOrdersWithoutReview($user_id) {
+        $stmt = $this->pdo->prepare("
+            SELECT o.id, o.order_number FROM orders o
+            LEFT JOIN reviews r ON r.order_id = o.id
+            WHERE o.user_id = :user_id
+            AND o.status = 'TERMINEE'
+            AND r.id IS NULL
+        ");
+        $stmt->execute([':user_id' => $user_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

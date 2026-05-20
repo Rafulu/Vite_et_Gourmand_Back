@@ -15,6 +15,16 @@
     <h1>Mes avis</h1>
     <a href="/account" class="btn btn-secondary mb-4">← Mon compte</a>
 
+    <?php if (!empty($eligibleOrders)): ?>
+        <div class="alert alert-info">
+            <?php foreach ($eligibleOrders as $o): ?>
+                <a href="/reviews/submit/<?= (int)$o['id'] ?>" class="btn btn-sm btn-primary me-2 mb-2">
+                    Déposer un avis — <?= htmlspecialchars($o['order_number']) ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
     <?php if (empty($reviews)): ?>
         <p>Vous n'avez pas encore déposé d'avis.</p>
     <?php else: ?>

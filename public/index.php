@@ -205,6 +205,14 @@ if (preg_match('/^\/employee\/orders\/(\d+)\/comment$/', $url, $matches)) {
     exit();
 }
 
+// Gestion formulaire Avis
+if (preg_match('/^\/reviews\/submit\/(\d+)$/', $url, $matches)) {
+    SecurityHelper::requireLogin();
+    $order_id = $matches[1];
+    $review->handleSubmit($order_id);
+    exit();
+}
+
 // Gestion Avis client
 if (preg_match('/^\/employee\/reviews\/(\d+)\/(validate|reject)$/', $url, $matches)) {
     SecurityHelper::requireRole([1, 2, 6]);
@@ -505,10 +513,11 @@ switch($url) {
     case '/my-reviews':
         SecurityHelper::requireLogin();
         $reviews = $review->getMyReviews();
+        $eligibleOrders = $review->getEligibleOrders();
         require_once '../src/views/client/my-reviews.php';
         break;
 
-            // Espace Employé
+    // Espace Employé
     case '/employee':
         SecurityHelper::requireRole([1, 2, 3, 4, 6]);
         require_once '../src/views/employee/dashboard-employee.php';
