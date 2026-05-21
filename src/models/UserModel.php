@@ -31,7 +31,7 @@ class UserModel {
 
     public function createEmployee($data) {
         $stmt = $this->pdo->prepare("
-            INSERT INTO users (first_name, last_name, email, password, role_id, is_blocked, created_at)
+            INSERT INTO users (first_name, last_name, email, password, role_id, is_blocked, create_at)
             VALUES (:first_name, :last_name, :email, :password, :role_id, 0, NOW())
         ");
         $stmt->execute([
@@ -76,7 +76,7 @@ class UserModel {
         $stmt = $this->pdo->prepare("
             SELECT u.*, r.name as role_name
             FROM users u
-            JOIN roles r ON u.role_id = r.id
+            JOIN role r ON u.role_id = r.id
             WHERE u.role_id IN (2, 3, 4, 6)
             ORDER BY u.last_name ASC
         ");
@@ -93,7 +93,7 @@ class UserModel {
 
     public function findAllRoles() {
         $stmt = $this->pdo->prepare("
-            SELECT * FROM roles WHERE id IN (2, 3, 4, 6)
+            SELECT * FROM role WHERE id IN (2, 3, 4, 6)
         ");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

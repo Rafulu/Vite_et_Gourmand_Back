@@ -14,13 +14,38 @@
         </a>
         <div class="collapse navbar-collapse" id="navMenu">
             <ul class="navbar-nav mx-auto">
-                <li class="nav-item"><a class="nav-link" href="/">Accueil</a></li>
-                <li class="nav-item"><a class="nav-link" href="/menus">Menus</a></li>
-                <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
+                <?php
+                $role = $_SESSION['role_id'] ?? null;
+                if ($role === 1): ?>
+                    <!-- ADMIN -->
+                    <li class="nav-item"><a class="nav-link" href="/admin">Tableau de bord</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/employee/orders">Commandes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/employee/reviews">Avis</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/employees">Employés</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/stats">Statistiques</a></li>
+                <?php elseif (in_array($role, [2, 3, 4, 6])): ?>
+                    <!-- EMPLOYE -->
+                    <li class="nav-item"><a class="nav-link" href="/employee">Tableau de bord</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/employee/orders">Commandes</a></li>
+                    <?php if (in_array($role, [2, 6])): ?>
+                    <li class="nav-item"><a class="nav-link" href="/employee/reviews">Avis</a></li>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <!-- CLIENT / PUBLIC -->
+                    <li class="nav-item"><a class="nav-link" href="/">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/menus">Menus</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
+                <?php endif; ?>
             </ul>
             <div class="d-flex">
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <a href="/account" class="btn btn-outline-primary me-2">Mon compte</a>
+                    <?php if ($role === 5): ?>
+                        <a href="/account" class="btn btn-outline-primary me-2">Mon compte</a>
+                    <?php else: ?>
+                        <span class="btn btn-outline-secondary me-2 disabled">
+                            <?php echo htmlspecialchars($_SESSION['first_name'] ?? ''); ?>
+                        </span>
+                    <?php endif; ?>
                     <a href="/logout" class="btn btn-primary">Déconnexion</a>
                 <?php else: ?>
                     <a href="/login" class="btn btn-outline-primary me-2">Se connecter</a>

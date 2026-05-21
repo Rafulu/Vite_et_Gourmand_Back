@@ -106,7 +106,7 @@ class OrderModel {
     // Mettre à jour le statut
     public function updateStatus($id, $status, $author_id, $reason = null, $contact = null) {
         $stmt = $this->pdo->prepare("
-            UPDATE orders SET status = :status, updated_at = NOW() WHERE id = :id
+            UPDATE orders SET status = :status, update_at = NOW() WHERE id = :id
         ");
         $stmt->execute([':status' => $status, ':id' => $id]);
 

@@ -140,6 +140,6 @@ class AuthController {
 
         // TODO: envoyer email avec PHPMailer
 
-        return ['success' => true];
+        return ['success' => true, 'temp_password' => $tempPassword];
     }
 }

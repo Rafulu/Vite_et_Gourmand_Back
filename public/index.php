@@ -642,9 +642,20 @@ switch($url) {
         }
         break;
     
-    // Espace Client - Utilisateur connecté
+    // Espace Utilisateur connecté
     case '/account':
         SecurityHelper::requireLogin();
+        $role = $_SESSION['role_id'];
+        if ($role === 1) {
+            header('Location: /admin');
+            exit();
+        }
+        if (in_array($role, [2, 3, 4, 6])) {
+            header('Location: /employee');
+            exit();
+        }
+        $userModel = new UserModel($pdo);
+        $user = $userModel->findById($_SESSION['user_id']);
         require_once '../src/views/client/account.php';
         break;
     
@@ -727,26 +738,28 @@ switch($url) {
         
 
     case '/admin/employees/create':
-    SecurityHelper::requireRole([1]);
-    if ($method === 'GET') {
-        $userModel = new UserModel($pdo);
-        $roles = $userModel->findAllRoles();
-        require_once '../src/views/admin/employee-create.php';
-    }
-    if ($method === 'POST') {
-        SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
-        $result = $auth->createEmployee($_POST);
-        if (isset($result['success'])) {
-            header('Location: /admin/employees?success=1');
-        } else {
-            $error = $result['error'];
+        SecurityHelper::requireRole([1]);
+        if ($method === 'GET') {
             $userModel = new UserModel($pdo);
             $roles = $userModel->findAllRoles();
             require_once '../src/views/admin/employee-create.php';
         }
-        exit();
-    }
-    break;
+        if ($method === 'POST') {
+            SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+            $result = $auth->createEmployee($_POST);
+            if (isset($result['success'])) {
+                $_SESSION['temp_password'] = $result['temp_password'];
+                $_SESSION['temp_email'] = $_POST['email'];
+                header('Location: /admin/employees?success=1');
+            } else {
+                $error = $result['error'];
+                $userModel = new UserModel($pdo);
+                $roles = $userModel->findAllRoles();
+                require_once '../src/views/admin/employee-create.php';
+            }
+            exit();
+        }
+        break;
 
     case '/admin/stats':
          SecurityHelper::requireLogin();
