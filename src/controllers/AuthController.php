@@ -23,10 +23,12 @@ class AuthController {
         }
 
         //Stockage des informations en session
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['role_id'] = $user['role_id'];
+        $_SESSION['user_id']    = $user['id'];
+        $_SESSION['role_id']    = $user['role_id'];
         $_SESSION['first_name'] = $user['first_name'];
-        $_SESSION['email'] = $user['email'];
+        $_SESSION['last_name']  = $user['last_name'];
+        $_SESSION['email']      = $user['email'];
+        $_SESSION['phone']      = $user['phone'];
 
         return ['success' => true, 'session_id' => session_id(), 'role_id' => $user['role_id']];
     }
@@ -108,7 +110,9 @@ class AuthController {
         $userModel->update($id, $data);
 
         $_SESSION['first_name'] = $data['first_name'];
+        $_SESSION['last_name'] = $data['last_name'];
         $_SESSION['email']      = $data['email'];
+        $_SESSION['phone']     = $data['phone'];
 
         return ['success' => true];
     }

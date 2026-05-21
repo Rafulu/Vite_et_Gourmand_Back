@@ -79,19 +79,27 @@ class OrderModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Créer une commande
     public function create($data) {
         $stmt = $this->pdo->prepare("
-            INSERT INTO orders (user_id, delivery_address_id, billing_address_id, order_date, delivery_date, guest_count, status, updated_at)
-            VALUES (:user_id, :delivery_address_id, :billing_address_id, NOW(), :delivery_date, :guest_count, 'EN_ATTENTE', NOW())
+            INSERT INTO orders (user_id, menu_id, delivery_address_id, billing_address_id, order_date, delivery_date, guest_count, total_price, menu_price, delivery_price, option_price, discount, detail, order_number, status, update_at)
+            VALUES (:user_id, :menu_id, :delivery_address_id, :billing_address_id, NOW(), :delivery_date, :guest_count, :total_price, :menu_price, :delivery_price, :option_price, :discount, :detail, :order_number, 'EN_ATTENTE', NOW())
         ");
         $stmt->execute([
-            ':user_id' => $data['user_id'],
+            ':user_id'             => $data['user_id'],
+            ':menu_id'             => $data['menu_id'],
             ':delivery_address_id' => $data['delivery_address_id'],
-            ':billing_address_id' => $data['billing_address_id'],
-            ':delivery_date' => $data['delivery_date'],
-            ':guest_count' => $data['guest_count']
+            ':billing_address_id'  => $data['billing_address_id'],
+            ':delivery_date'       => $data['delivery_date'],
+            ':guest_count'         => $data['guest_count'],
+            ':total_price'         => $data['total_price'],
+            ':menu_price'          => $data['menu_price'] ?? 0,
+            ':delivery_price'      => $data['delivery_price'] ?? 0,
+            ':option_price'        => $data['option_price'] ?? 0,
+            ':discount'            => $data['discount'] ? 1 : 0,
+            ':detail'              => $data['detail'] ?? null,
+            ':order_number'        => $data['order_number'],
         ]);
+        $id = $this->pdo->lastInsertId();
         return $this->pdo->lastInsertId();
     }
 

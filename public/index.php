@@ -97,13 +97,18 @@ if (preg_match('/^\/order\/(\d+)$/', $url, $matches)) {
     $menu = $menuModel->findById($id);
     $addressModel = new AddressModel($pdo);
     $addresses = $addressModel->findByUserId($_SESSION['user_id']);
-    $conditions = $pdo->prepare("
+
+    $stmt = $pdo->prepare("
         SELECT c.* FROM conditions c
         JOIN condition_menu cm ON c.id = cm.condition_id
         WHERE cm.menu_id = :menu_id
     ");
-    $conditions->execute([':menu_id' => $id]);
-    $conditions = $conditions->fetchAll(PDO::FETCH_ASSOC);
+    $stmt->execute([':menu_id' => $id]);
+    $conditions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmt2 = $pdo->query("SELECT * FROM resources ORDER BY type, name");
+    $resources = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+
     require_once '../src/views/client/order-form.php';
     exit();
 }
@@ -290,10 +295,15 @@ switch($url) {
             $delivery_address_id = $_POST['delivery_address_id'] ?? '';
             $billing_address_id  = $_POST['billing_address_id'] ?? '';
             $delivery_date       = SecurityHelper::sanitize($_POST['delivery_date'] ?? '');
+            $menu_price     = filter_var($_POST['menu_price'] ?? 0, FILTER_VALIDATE_FLOAT) ?: 0;
+            $delivery_price = filter_var($_POST['delivery_price'] ?? 0, FILTER_VALIDATE_FLOAT) ?: 0;
+            $option_price   = filter_var($_POST['option_price'] ?? 0, FILTER_VALIDATE_FLOAT) ?: 0;
             $guest_count         = filter_var($_POST['guest_count'] ?? '', FILTER_VALIDATE_INT);
+            $discount            = (!empty($_POST['discount']) && $_POST['discount'] == 1) ? 1 : 0;
             $total_price         = filter_var($_POST['total_price'] ?? '', FILTER_VALIDATE_FLOAT);
             $detail              = SecurityHelper::sanitize($_POST['detail'] ?? '');
             $accept_conditions   = isset($_POST['accept_conditions']);
+            $accept_cgv = isset($_POST['accept_cgv']);
 
             if (!$menu_id)                                              $errors[] = 'Menu invalide.';
             if (!$delivery_address_id)                                  $errors[] = 'Adresse de livraison invalide.';
@@ -301,6 +311,7 @@ switch($url) {
             if (!$guest_count || $guest_count < 1)                      $errors[] = 'Nombre de personnes invalide.';
             if (!$total_price || $total_price <= 0)                     $errors[] = 'Prix total invalide.';
             if (!$accept_conditions)                                    $errors[] = 'Vous devez accepter les conditions.';
+            if (!$accept_cgv)                                           $errors[] = 'Vous devez accepter les CGV.';
 
             $addresses = (new AddressModel($pdo))->findByUserId($_SESSION['user_id']);
             $validIds  = array_column($addresses, 'id');
@@ -358,6 +369,12 @@ switch($url) {
                     $pdo->rollBack();
                     $error = implode('<br>', $errors);
                     $menu  = (new MenuModel($pdo))->findById($menu_id);
+                    $addresses = (new AddressModel($pdo))->findByUserId($_SESSION['user_id']);
+                    $stmt2 = $pdo->query("SELECT * FROM resources ORDER BY type, name");
+                    $resources = $stmt2 ? $stmt2->fetchAll(PDO::FETCH_ASSOC) : [];
+                    $stmtC = $pdo->prepare("SELECT c.* FROM conditions c JOIN condition_menu cm ON c.id = cm.condition_id WHERE cm.menu_id = :menu_id");
+                    $stmtC->execute([':menu_id' => $menu_id]);
+                    $conditions = $stmtC->fetchAll(PDO::FETCH_ASSOC);
                     require_once '../src/views/client/order-form.php';
                     exit();
                 }
@@ -368,7 +385,13 @@ switch($url) {
                     'delivery_address_id' => $delivery_address_id,
                     'billing_address_id'  => $billing_address_id,
                     'delivery_date'       => $delivery_date,
+                    'menu_price'          => $menu_price,
+                    'delivery_price'      => $delivery_price,
+                    'option_price'        => $option_price,
+                    'equipement_loan'     => $equipement_loan,
+                    'equipement_return'   => 0,
                     'guest_count'         => $guest_count,
+                    'discount'            => $discount,
                     'total_price'         => $total_price,
                     'detail'              => $detail,
                     'order_number'        => 'VG-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6)),
@@ -384,12 +407,22 @@ switch($url) {
                 $pdo->rollBack();
                 $error = $result['error'] ?? 'Une erreur est survenue';
                 $menu  = (new MenuModel($pdo))->findById($menu_id);
+                $addresses = (new AddressModel($pdo))->findByUserId($_SESSION['user_id']);
+                $stmt2 = $pdo->query("SELECT * FROM resources ORDER BY type, name");
+                $resources = $stmt2 ? $stmt2->fetchAll(PDO::FETCH_ASSOC) : [];
+                $stmtC = $pdo->prepare("SELECT c.* FROM conditions c JOIN condition_menu cm ON c.id = cm.condition_id WHERE cm.menu_id = :menu_id");
+                $stmtC->execute([':menu_id' => $menu_id]);
+                $conditions = $stmtC->fetchAll(PDO::FETCH_ASSOC);
                 require_once '../src/views/client/order-form.php';
 
             } catch (Exception $e) {
                 $pdo->rollBack();
-                $error = 'Une erreur est survenue, veuillez réessayer.';
+                $error = $e->getMessage();
                 $menu  = (new MenuModel($pdo))->findById($menu_id);
+                $addresses = (new AddressModel($pdo))->findByUserId($_SESSION['user_id']);
+                $stmt2 = $pdo->query("SELECT * FROM resources ORDER BY type, name");
+                $resources = $stmt2 ? $stmt2->fetchAll(PDO::FETCH_ASSOC) : [];
+                $conditions = [];
                 require_once '../src/views/client/order-form.php';
             }
         }

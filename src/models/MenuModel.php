@@ -35,7 +35,20 @@ class MenuModel {
 
     // Récupère un menu par son id
     public function findById($id) {
-        $sql = $this->baseQuery() . " AND m.id = :id";
+        $sql = "
+            SELECT m.*, t.name as theme_name,
+            GROUP_CONCAT(DISTINCT a.name) as allergens,
+            GROUP_CONCAT(DISTINCT a.icon) as allergen_icons,
+            GROUP_CONCAT(DISTINCT d.diet) as diets
+            FROM menus m
+            LEFT JOIN themes t ON m.theme_id = t.id
+            LEFT JOIN composition_menu cm ON m.id = cm.menu_id
+            LEFT JOIN dishes d ON cm.dish_id = d.id
+            LEFT JOIN allergen_dish ad ON d.id = ad.dish_id
+            LEFT JOIN allergens a ON ad.allergen_id = a.id
+            WHERE m.is_active = 1 AND m.id = :id
+            GROUP BY m.id
+        ";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
