@@ -73,6 +73,76 @@ if (preg_match('/^\/menus\/(\d+)$/', $url, $matches)) {
     exit();
 }
 
+if (preg_match('/^\/menus\/capacity$/', $url) && $method === 'GET') {
+    header('Content-Type: application/json');
+
+    $menu_id = filter_var($_GET['menu_id'] ?? '', FILTER_VALIDATE_INT);
+    $date    = SecurityHelper::sanitize($_GET['date'] ?? '');
+
+    if (!$menu_id || !$date || strtotime($date) <= time()) {
+        echo json_encode(['error' => 'Paramètres invalides']);
+        exit();
+    }
+
+    // Temps de préparation du menu (somme des plats)
+    $stmt = $pdo->prepare("
+        SELECT COALESCE(SUM(d.preparation_time), 0) as total_prep_time
+        FROM composition_menu cm
+        JOIN dishes d ON cm.dish_id = d.id
+        WHERE cm.menu_id = :menu_id AND d.is_active = 1
+    ");
+    $stmt->execute([':menu_id' => $menu_id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $prep_time = (int)$row['total_prep_time'];
+
+    if ($prep_time <= 0) {
+        echo json_encode(['error' => 'Temps de préparation non défini']);
+        exit();
+    }
+
+    // Capacité journalière depuis settings
+    $stmtS = $pdo->query("SELECT value FROM settings WHERE setting_key = 'daily_capacity_minutes' LIMIT 1");
+    $daily = (int)($stmtS->fetchColumn() ?: 840);
+
+    // Calcul sur les 4 jours avant la date de livraison
+    $total_available = 0;
+    $delivery        = new DateTime($date);
+
+    for ($i = 4; $i >= 1; $i--) {
+        $day = clone $delivery;
+        $day->modify("-{$i} days");
+        $dayStr = $day->format('Y-m-d');
+
+        $stmtP = $pdo->prepare("SELECT max_capacity, used_capacity FROM production_planning WHERE date = :date");
+        $stmtP->execute([':date' => $dayStr]);
+        $planning = $stmtP->fetch(PDO::FETCH_ASSOC);
+
+        if ($planning) {
+            $total_available += max(0, $planning['max_capacity'] - $planning['used_capacity']);
+        } else {
+            $total_available += $daily;
+        }
+    }
+
+    // Calcul parts
+    $parts = (int)floor($total_available / $prep_time);
+
+    // Réponse
+    $menu_min = 0;
+    $stmtM = $pdo->prepare("SELECT min_guests FROM menus WHERE id = :id");
+    $stmtM->execute([':id' => $menu_id]);
+    $menu_min = (int)($stmtM->fetchColumn() ?: 0);
+
+    if ($parts < $menu_min) {
+        echo json_encode(['status' => 'unavailable', 'message' => 'Indisponible']);
+    } elseif ($parts > 100) {
+        echo json_encode(['status' => 'available', 'message' => 'Plus de 100 places disponibles']);
+    } else {
+        echo json_encode(['status' => 'available', 'message' => $parts . ' places disponibles']);
+    }
+    exit();
+}
+
 // Gestion des routes dynamiques pour les plats
 if (preg_match('/^\/dishes\/(\d+)$/', $url, $matches)) {
     $id = $matches[1];
@@ -400,6 +470,40 @@ switch($url) {
                 $result = $order->create($data);
                 if (isset($result['success'])) {
                     $pdo->commit();
+                    // Bloquer la capacité de production sur 4 jours
+                    $stmtPrep = $pdo->prepare("
+                    SELECT COALESCE(SUM(d.preparation_time), 0) as total_prep_time
+                    FROM composition_menu cm
+                    JOIN dishes d ON cm.dish_id = d.id
+                    WHERE cm.menu_id = :menu_id AND d.is_active = 1
+                ");
+                $stmtPrep->execute([':menu_id' => $menu_id]);
+                $prep_time = (int)$stmtPrep->fetchColumn();
+
+                $stmtCap = $pdo->query("SELECT value FROM settings WHERE setting_key = 'daily_capacity_minutes' LIMIT 1");
+                $daily = (int)($stmtCap->fetchColumn() ?: 840);
+
+                $total_needed = $prep_time * $guest_count;
+                $per_day      = (int)ceil($total_needed / 4);
+
+                $delivery = new DateTime($delivery_date);
+                for ($i = 4; $i >= 1; $i--) {
+                    $day = clone $delivery;
+                    $day->modify("-{$i} days");
+                    $dayStr = $day->format('Y-m-d');
+
+                    $stmtCheck = $pdo->prepare("SELECT id, used_capacity FROM production_planning WHERE date = :date");
+                    $stmtCheck->execute([':date' => $dayStr]);
+                    $existing = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+                    if ($existing) {
+                    $stmtUpdate = $pdo->prepare("UPDATE production_planning SET used_capacity = used_capacity + :used WHERE date = :date");
+                    $stmtUpdate->execute([':used' => $per_day, ':date' => $dayStr]);
+                    } else {    
+                    $stmtInsert = $pdo->prepare("INSERT INTO production_planning (date, max_capacity, used_capacity) VALUES (:date, :max, :used)");
+                    $stmtInsert->execute([':date' => $dayStr, ':max' => $daily, ':used' => $per_day]);
+                    }
+                }
                     header('Location: /orders/' . $result['id']);
                     exit();
                 }

@@ -37,14 +37,14 @@
                 <?php endif; ?>
 
                 <!-- Vérification disponibilité -->
-                <div class="card p-3 mt-3">
+               <div class="card p-3 mt-3">
                     <h2 class="h5">Vérifier la disponibilité</h2>
                     <div class="d-flex gap-2">
-                        <input type="date" id="delivery_date" class="form-control">
-                        <input type="number" id="guest_count" class="form-control" placeholder="Nb personnes" min="<?php echo $menu['min_guests']; ?>">
+                        <input type="date" id="check_date" class="form-control" min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>">
+                        <input type="number" id="check_guests" class="form-control" placeholder="Nb personnes" min="<?php echo $menu['min_guests']; ?>">
                         <button class="btn btn-primary" id="btnVerifier">Vérifier</button>
                     </div>
-                    <div id="disponibilite" class="mt-2"></div>
+                    <div id="disponibilite" class="mt-2" aria-live="polite"></div>
                 </div>
 
                 <!-- Bouton commander -->

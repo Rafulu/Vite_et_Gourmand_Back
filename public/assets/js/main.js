@@ -50,6 +50,42 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // =============================================
+    // VÉRIFICATION DISPONIBILITÉ MENU
+    // =============================================
+    const btnVerifier = document.getElementById('btnVerifier');
+    if (btnVerifier) {
+        btnVerifier.addEventListener('click', async function() {
+            const date    = document.getElementById('check_date')?.value;
+            const guests  = parseInt(document.getElementById('check_guests')?.value) || 0;
+            const menuId  = window.location.pathname.split('/').pop();
+            const div     = document.getElementById('disponibilite');
+
+            if (!date) {
+                div.innerHTML = '<span class="text-danger">Veuillez choisir une date.</span>';
+                return;
+            }
+
+            div.innerHTML = '<span class="text-muted">Vérification en cours...</span>';
+
+            try {
+                const res  = await fetch(`/menus/capacity?menu_id=${menuId}&date=${encodeURIComponent(date)}`);
+                const data = await res.json();
+
+                if (data.error) {
+                    div.innerHTML = `<span class="text-danger">${data.error}</span>`;
+                } else if (data.status === 'unavailable') {
+                    div.innerHTML = '<span class="badge bg-danger">Indisponible</span>';
+                } else {
+                    const guestsOk = guests > 0 && guests <= parseInt(data.message);
+                    div.innerHTML = `<span class="badge bg-success">${data.message}</span>`;
+                }
+            } catch(e) {
+                div.innerHTML = '<span class="text-danger">Erreur de connexion.</span>';
+            }
+        });
+    }
+
+    // =============================================
     // FORMULAIRE COMMANDE
     // =============================================
     const guestInput    = document.getElementById('guest_count');
@@ -348,6 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Init
     chargerDisponibilites();
     majBouton();
+
 });
 
 

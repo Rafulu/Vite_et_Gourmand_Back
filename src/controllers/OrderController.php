@@ -57,7 +57,39 @@ class OrderController {
 
         $orderModel = new OrderModel($this->pdo);
         $orderModel->updateStatus($id, $status, $_SESSION['user_id'], $reason, $contact);
+        if ($status === 'ANNULEE') {
+            $orderData = $orderModel->findById($id);
+            if ($orderData) {
+                $stmtPrep = $this->pdo->prepare("
+                    SELECT COALESCE(SUM(d.preparation_time), 0) as total_prep_time
+                    FROM composition_menu cm
+                    JOIN dishes d ON cm.dish_id = d.id
+                    WHERE cm.menu_id = :menu_id AND d.is_active = 1
+                ");
+                $stmtPrep->execute([':menu_id' => $orderData['menu_id']]);
+                $prep_time = (int)$stmtPrep->fetchColumn();
 
+                $stmtCap = $this->pdo->query("SELECT value FROM settings WHERE setting_key = 'daily_capacity_minutes' LIMIT 1");
+                $daily = (int)($stmtCap->fetchColumn() ?: 840);
+
+                $total_needed = $prep_time * $orderData['guest_count'];
+                $per_day      = (int)ceil($total_needed / 4);
+
+                $delivery = new DateTime($orderData['delivery_date']);
+                for ($i = 4; $i >= 1; $i--) {
+                    $day = clone $delivery;
+                    $day->modify("-{$i} days");
+                    $dayStr = $day->format('Y-m-d');
+
+                    $stmtUpdate = $this->pdo->prepare("
+                        UPDATE production_planning 
+                        SET used_capacity = GREATEST(0, used_capacity - :used) 
+                        WHERE date = :date
+                    ");
+                    $stmtUpdate->execute([':used' => $per_day, ':date' => $dayStr]);
+                }
+            }
+        }
         return ['success' => true];
     }
 
