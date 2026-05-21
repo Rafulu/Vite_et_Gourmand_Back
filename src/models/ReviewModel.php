@@ -105,4 +105,18 @@ class ReviewModel {
         $stmt->execute([':user_id' => $user_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function findValidated() {
+        $stmt = $this->pdo->prepare("
+            SELECT r.*, u.first_name, u.last_name, m.name as menu_name
+            FROM reviews r
+            JOIN users u ON r.user_id = u.id
+            JOIN orders o ON r.order_id = o.id
+            JOIN menus m ON o.menu_id = m.id
+            WHERE r.is_validated = 1
+            ORDER BY r.created_at DESC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

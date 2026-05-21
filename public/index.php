@@ -239,6 +239,14 @@ switch($url) {
 
     //Pages publiques
     case '/':
+        $reviewModel = new ReviewModel($pdo);
+        $validatedReviews = $reviewModel->findValidated();
+        require_once '../src/views/home.php';
+        break;
+
+    // Page non trouvée
+    default:
+        http_response_code(404);
         break;
 
     case '/menus':
@@ -476,6 +484,25 @@ switch($url) {
         break;
         
     case '/contact':
+        if ($method === 'GET') {
+            require_once '../src/views/contact.php';
+        }
+        if ($method === 'POST') {
+            SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+            $subject = SecurityHelper::sanitize($_POST['subject'] ?? '');
+            $message = SecurityHelper::sanitize($_POST['message'] ?? '');
+            $email   = SecurityHelper::sanitize($_POST['email'] ?? '');
+
+            if (!SecurityHelper::validateEmail($email) || strlen($subject) < 3 || strlen($message) < 10) {
+                $error = 'Veuillez vérifier les champs du formulaire.';
+                require_once '../src/views/contact.php';
+                break;
+            }
+
+            // TODO: PHPMailer - envoyer mail à l'entreprise
+            $success = true;
+            require_once '../src/views/contact.php';
+        }
         break;
     
     // Espace Client - Utilisateur connecté
@@ -605,9 +632,4 @@ switch($url) {
         header('Location: /');
         exit();
         break;   
-    
-    // Page non trouvée
-    default:
-        http_response_code(404);
-        break;
 }
