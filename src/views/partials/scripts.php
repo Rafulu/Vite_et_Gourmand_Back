@@ -8,4 +8,4 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <!-- Notre JS -->
-<script src="/assets/js/main.js?v=2"></script>
+<script type="module" src="/assets/js/main.js"></script>
