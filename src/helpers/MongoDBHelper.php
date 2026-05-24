@@ -45,16 +45,37 @@ class MongoDBHelper {
         }
     }
 
-    public function getStatsByMenu(): array {
+    public function getStatsByMenu(int $days = 0, string $menu = '', string $dateStart = '', string $dateEnd = ''): array {
         try {
-            return $this->collection->aggregate([
-                ['$group' => [
-                    '_id'          => '$menu_name',
-                    'nb_commandes' => ['$sum' => 1],
-                    'ca_total'     => ['$sum' => '$total_price'],
-                ]],
-                ['$sort' => ['nb_commandes' => -1]],
-            ])->toArray();
+            $pipeline = [];
+            $match = [];
+
+            if ($days > 0) {
+                $since = new MongoDB\BSON\UTCDateTime((time() - $days * 86400) * 1000);
+                $match['order_date'] = ['$gte' => $since];
+            } elseif ($dateStart && $dateEnd) {
+                $match['order_date'] = [
+                    '$gte' => new MongoDB\BSON\UTCDateTime(strtotime($dateStart) * 1000),
+                    '$lte' => new MongoDB\BSON\UTCDateTime((strtotime($dateEnd) + 86399) * 1000),
+                ];
+            }
+
+            if ($menu !== '') {
+                $match['menu_name'] = $menu;
+            }
+
+            if (!empty($match)) {
+                $pipeline[] = ['$match' => $match];
+            }
+
+            $pipeline[] = ['$group' => [
+                '_id'          => '$menu_name',
+                'nb_commandes' => ['$sum' => 1],
+                'ca_total'     => ['$sum' => '$total_price'],
+            ]];
+            $pipeline[] = ['$sort' => ['nb_commandes' => -1]];
+
+            return $this->collection->aggregate($pipeline)->toArray();
         } catch (Exception $e) {
             error_log('MongoDB aggregate error: ' . $e->getMessage());
             throw $e;

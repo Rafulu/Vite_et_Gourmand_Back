@@ -231,9 +231,90 @@
 </main>
 
 <script>
+const orderId = <?php echo (int)$orderData['id']; ?>;
+const csrfStatus = <?php echo json_encode(SecurityHelper::generateCsrfToken()); ?>;
+const csrfComment = <?php echo json_encode(SecurityHelper::generateCsrfToken()); ?>;
+
+// Toggle motif annulation
 document.getElementById('status')?.addEventListener('change', function() {
     const block = document.getElementById('cancel-block');
     if (block) block.style.display = this.value === 'ANNULEE' ? 'block' : 'none';
+});
+
+// Fetch statut
+document.querySelector('form[action$="/status"]')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = this;
+    const btn = form.querySelector('button[type="submit"]');
+    const status = form.querySelector('[name="status"]').value;
+    const body = new URLSearchParams({
+        csrf_token: csrfStatus,
+        status: status,
+        cancellation_reason: form.querySelector('[name="cancellation_reason"]')?.value ?? '',
+        contact_channel: form.querySelector('[name="contact_channel"]')?.value ?? '',
+        authorized_by: form.querySelector('[name="authorized_by"]')?.value ?? ''
+    });
+
+    btn.disabled = true;
+
+    fetch(`/employee/orders/${orderId}/status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'fetch'
+        },
+        body: body.toString()
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const badge = document.querySelector('.badge.bg-secondary');
+            if (badge) badge.textContent = status;
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success mt-2';
+            alert.textContent = 'Statut mis à jour.';
+            form.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        } else {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger mt-2';
+            alert.textContent = data.error ?? 'Erreur lors de la mise à jour.';
+            form.appendChild(alert);
+            setTimeout(() => alert.remove(), 4000);
+        }
+        btn.disabled = false;
+    })
+    .catch(() => { btn.disabled = false; });
+});
+
+// Fetch commentaire interne
+document.querySelector('form[action$="/comment"]')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = this;
+    const btn = form.querySelector('button[type="submit"]');
+    const comment = form.querySelector('[name="comment"]').value;
+
+    btn.disabled = true;
+
+    fetch(`/employee/orders/${orderId}/comment`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'fetch'
+        },
+        body: `csrf_token=${encodeURIComponent(csrfComment)}&comment=${encodeURIComponent(comment)}`
+    })
+    .then(r => {
+        if (r.ok) {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success mt-2';
+            alert.textContent = 'Commentaire enregistré.';
+            form.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        }
+        btn.disabled = false;
+    })
+    .catch(() => { btn.disabled = false; });
 });
 </script>
 

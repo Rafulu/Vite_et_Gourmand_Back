@@ -42,9 +42,9 @@
                     <?php if ($role === 5): ?>
                         <a href="/account" class="btn btn-outline-primary me-2">Mon compte</a>
                     <?php else: ?>
-                        <span class="btn btn-outline-secondary me-2 disabled">
+                        <a href="/account" class="btn btn-outline-light me-2">
                             <?php echo htmlspecialchars($_SESSION['first_name'] ?? ''); ?>
-                        </span>
+                        </a>
                     <?php endif; ?>
                     <a href="/logout" class="btn btn-primary">Déconnexion</a>
                 <?php else: ?>

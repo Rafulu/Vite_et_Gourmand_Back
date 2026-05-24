@@ -242,6 +242,12 @@ if (preg_match('/^\/employee\/orders\/(\d+)\/status$/', $url, $matches)) {
     SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
     $id = $matches[1];
     $result = $order->updateStatus($id, $_POST);
+
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'fetch') {
+        header('Content-Type: application/json');
+        echo json_encode($result);
+        exit();
+    }
     if (isset($result['success'])) {
         header('Location: /employee/orders/' . $id);
     } else {
@@ -276,6 +282,12 @@ if (preg_match('/^\/employee\/orders\/(\d+)\/comment$/', $url, $matches)) {
     SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
     $id = $matches[1];
     $result = $order->addComment($id, $_POST['comment']);
+
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'fetch') {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+        exit();
+    }
     header('Location: /employee/orders/' . $id);
     exit();
 }
@@ -295,6 +307,12 @@ if (preg_match('/^\/employee\/reviews\/(\d+)\/(validate|reject)$/', $url, $match
     $id = $matches[1];
     $action = $matches[2];
     $review->$action($id);
+
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'fetch') {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+        exit();
+    }
     header('Location: /employee/reviews');
     exit();
 }
@@ -306,7 +324,28 @@ if (preg_match('/^\/admin\/employees\/(\d+)\/toggle$/', $url, $matches)) {
     $id = $matches[1];
     $userModel = new UserModel($pdo);
     $userModel->toggleBlock($id);
+
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'fetch') {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+        exit();
+    }
     header('Location: /admin/employees');
+    exit();
+}
+
+// Stats JSON - fetch
+if ($url === '/admin/stats/data' && $method === 'GET') {
+    SecurityHelper::requireRole(1);
+    $days      = filter_var($_GET['period'] ?? 0, FILTER_VALIDATE_INT) ?: 0;
+    $menu      = SecurityHelper::sanitize($_GET['menu'] ?? '');
+    $dateStart = SecurityHelper::sanitize($_GET['date_start'] ?? '');
+    $dateEnd   = SecurityHelper::sanitize($_GET['date_end'] ?? '');
+    $mongoHelper = new MongoDBHelper();
+    $mongoHelper->syncFromMariaDB($pdo);
+    $stats = $mongoHelper->getStatsByMenu($days, $menu, $dateStart, $dateEnd);
+    header('Content-Type: application/json');
+    echo json_encode($stats);
     exit();
 }
 

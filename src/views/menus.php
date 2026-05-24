@@ -59,6 +59,19 @@
             </div>
         </div>
 
+        <!-- Disponibilité par date -->
+        <div class="card p-3 mb-4">
+            <div class="row align-items-end g-2">
+                <div class="col-md-3">
+                    <label for="global-date" class="form-label">Vérifier la disponibilité pour le</label>
+                    <input type="date" class="form-control" id="global-date" min="<?php echo date('Y-m-d'); ?>">
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-primary w-100" id="btn-check-dispo">Vérifier</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Liste des menus -->
         <div id="liste-menus">
             <?php foreach ($menus as $m): ?>
@@ -87,10 +100,11 @@
                             <p class="small">Allergènes : <?php echo htmlspecialchars($m['allergens']); ?></p>
                             <?php endif; ?>
 
-                            <div class="mt-2">
-                                <input type="date" class="form-control form-control-sm d-inline w-auto" 
-                                       id="date-<?php echo $m['id']; ?>">
-                                <a href="/menus/<?php echo $m['id']; ?>" class="btn btn-primary btn-sm ms-2">Détails</a>
+                            <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+                                <span class="badge bg-secondary dispo-badge" id="dispo-<?php echo $m['id']; ?>"></span>
+                                <a href="/menus/<?php echo $m['id']; ?>" 
+                                   class="btn btn-primary btn-sm"
+                                   id="btn-detail-<?php echo $m['id']; ?>">Détails</a>
                             </div>
                         </div>
                     </div>

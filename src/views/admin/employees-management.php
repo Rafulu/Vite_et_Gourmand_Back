@@ -52,16 +52,17 @@
                         <?php if ($e['is_blocked']): ?>
                             <span class="badge bg-success">Actif</span>
                         <?php else: ?>
-                            <span class="badge bg-danger">Débloquer</span>
+                            <span class="badge bg-danger">Bloquer</span>
                         <?php endif; ?>
                     </td>
                     <td>
-                        <form method="POST" action="/admin/employees/<?php echo $e['id']; ?>/toggle" class="d-inline">
-                            <input type="hidden" name="csrf_token" value="<?php echo SecurityHelper::generateCsrfToken(); ?>">
-                            <button type="submit" class="btn btn-sm <?php echo $e['is_blocked'] ? 'btn-warning' : 'btn-success'; ?>">
-                                <?php echo $e['is_blocked'] ? 'Bloquer' : 'Débloquer'; ?>
-                            </button>
-                        </form>
+                        <button
+                            class="btn btn-sm btn-toggle-employee <?php echo $e['is_blocked'] ? 'btn-warning' : 'btn-success'; ?>"
+                            data-id="<?php echo $e['id']; ?>"
+                            data-blocked="<?php echo $e['is_blocked'] ? '1' : '0'; ?>"
+                            data-csrf="<?php echo SecurityHelper::generateCsrfToken(); ?>">
+                            <?php echo $e['is_blocked'] ? 'Bloquer' : 'Débloquer'; ?>
+                        </button>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -69,6 +70,43 @@
         </table>
     </div>
 </main>
+
+<script>
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-toggle-employee');
+    if (!btn) return;
+
+    const id   = btn.dataset.id;
+    const csrf = btn.dataset.csrf;
+    const row  = btn.closest('tr');
+
+    btn.disabled = true;
+
+    fetch(`/admin/employees/${id}/toggle`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'fetch'
+        },
+        body: `csrf_token=${encodeURIComponent(csrf)}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const isBlocked = btn.dataset.blocked === '1';
+            btn.dataset.blocked = isBlocked ? '0' : '1';
+            btn.textContent = isBlocked ? 'Débloquer' : 'Bloquer';
+            btn.classList.toggle('btn-warning', !isBlocked);
+            btn.classList.toggle('btn-success', isBlocked);
+            const badge = row.querySelector('.badge');
+            badge.textContent = isBlocked ? 'Bloqué' : 'Actif';
+            badge.className = 'badge ' + (isBlocked ? 'bg-danger' : 'bg-success');
+        }
+        btn.disabled = false;
+    })
+    .catch(() => { btn.disabled = false; });
+});
+</script>
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>
 <?php require_once __DIR__ . '/../partials/scripts.php'; ?>

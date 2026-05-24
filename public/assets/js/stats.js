@@ -1,7 +1,7 @@
 const stats = JSON.parse(document.getElementById('stats-data').dataset.stats);
 const labels = stats.map(s => s.menu);
 
-new Chart(document.getElementById('chartCommandes'), {
+var chartCommandes = new Chart(document.getElementById('chartCommandes'), {
     type: 'bar',
     data: {
         labels,
@@ -13,7 +13,7 @@ new Chart(document.getElementById('chartCommandes'), {
     }
 });
 
-new Chart(document.getElementById('chartCA'), {
+var chartCA = new Chart(document.getElementById('chartCA'), {
     type: 'bar',
     data: {
         labels,

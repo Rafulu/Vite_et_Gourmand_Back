@@ -49,6 +49,45 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+     // =============================================
+    // DISPONIBILITÉ GLOBALE PAGE MENUS
+    // =============================================
+    const btnCheckDispo = document.getElementById('btn-check-dispo');
+    if (btnCheckDispo) {
+        btnCheckDispo.addEventListener('click', async function() {
+            const date = document.getElementById('global-date').value;
+            if (!date) return;
+
+            const badges = document.querySelectorAll('.dispo-badge');
+            badges.forEach(b => { b.textContent = '...'; b.className = 'badge bg-secondary dispo-badge'; });
+
+            const cards = document.querySelectorAll('[id^="dispo-"]');
+            for (const badge of cards) {
+                const menuId = badge.id.replace('dispo-', '');
+                try {
+                    const res  = await fetch(`/menus/capacity?menu_id=${menuId}&date=${encodeURIComponent(date)}`);
+                    const data = await res.json();
+                    const link = document.getElementById('btn-detail-' + menuId);
+
+                    if (data.error) {
+                        badge.textContent = data.error;
+                        badge.className = 'badge bg-warning text-dark dispo-badge';
+                    } else if (data.status === 'unavailable') {
+                        badge.textContent = 'Indisponible';
+                        badge.className = 'badge bg-danger dispo-badge';
+                    } else {
+                        badge.textContent = data.message;
+                        badge.className = 'badge bg-success dispo-badge';
+                        if (link) link.href = `/menus/${menuId}?date=${encodeURIComponent(date)}`;
+                    }
+                } catch(e) {
+                    badge.textContent = 'Erreur';
+                    badge.className = 'badge bg-danger dispo-badge';
+                }
+            }
+        });
+    }
+
     // =============================================
     // VÉRIFICATION DISPONIBILITÉ MENU
     // =============================================
@@ -84,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
+    
     // =============================================
     // FORMULAIRE COMMANDE
     // =============================================
@@ -384,7 +423,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Init
     chargerDisponibilites();
     majBouton();
-
 });
 
 
@@ -410,8 +448,9 @@ function afficherMenus(menus) {
                             </div>
                             <p class="text-muted small">${m.description}</p>
                             ${m.allergens ? `<p class="small">Allergènes : ${m.allergens}</p>` : ''}
-                            <div class="mt-2">
-                                <a href="/menus/${m.id}" class="btn btn-primary btn-sm">Détails</a>
+                           <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+                                <span class="badge bg-secondary dispo-badge" id="dispo-${m.id}"></span>
+                                <a href="/menus/${m.id}" class="btn btn-primary btn-sm" id="btn-detail-${m.id}">Détails</a>
                             </div>
                         </div>
                     </div>

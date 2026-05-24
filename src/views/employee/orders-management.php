@@ -13,7 +13,7 @@
 
 <main class="container-fluid my-5">
     <h1>Gestion des commandes</h1>
-    <a href="/employee" class="btn btn-secondary mb-4">← Tableau de bord</a>
+    <a href="<?php echo $_SESSION['role_id'] === 1 ? '/admin' : '/employee'; ?>" class="btn btn-secondary mb-4">← Tableau de bord</a>
 
     <!-- Filtres -->
     <div class="card mb-4">
