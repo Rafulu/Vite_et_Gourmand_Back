@@ -66,7 +66,7 @@ class AuthController {
         $userModel->create($data);
         $userId = $this->pdo->lastInsertId();
 
-        return ['success' => true, 'user_id' => $userId];
+        return ['success' => true, 'user_id' => $userId, 'email' => $data['email'], 'first_name' => $data['first_name']];
     }
 
     public function forgotPassword($email) {

@@ -43,9 +43,11 @@ require_once '../src/controllers/OrderController.php';
 require_once '../src/controllers/ReviewController.php';
 require_once '../src/controllers/AddressController.php';
 
-// Helpers: Fonctions utilitaires de sécurité
+// Helpers: Fonctions utilitaires d'aide
 require_once '../src/helpers/SecurityHelper.php';
 require_once '../src/helpers/MongoDBHelper.php';
+require_once '../src/helpers/MailHelper.php';
+
 
 
 // Création des objets en fonction de leur classes
@@ -634,6 +636,10 @@ switch($url) {
                     ];
                     $address->create($addressData);
                     $pdo->commit();
+
+                    // Mail de Bienvenue
+                    MailHelper::sendWelcome($result['email'], $result['first_name']);
+
                     header('Location: /login');
                     exit();
                 }
