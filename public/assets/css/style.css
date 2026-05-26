@@ -14,6 +14,13 @@ body {
     font-family: 'Montserrat', sans-serif;
     color: var(--couleur-texte);
     background-color: var(--couleur-fond);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
 }
 
 h2, h3 {

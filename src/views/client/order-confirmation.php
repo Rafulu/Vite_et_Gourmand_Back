@@ -53,7 +53,7 @@
                 </div>
 
                 <div class="text-center">
-                    <a href="/account" class="btn btn-primary">Voir mes commandes</a>
+                    <a href="/my-orders" class="btn btn-primary">Voir mes commandes</a>
                     <a href="/menus" class="btn btn-outline-secondary ms-2">Retour aux menus</a>
                 </div>
 
