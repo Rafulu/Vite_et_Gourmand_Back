@@ -545,6 +545,17 @@ switch($url) {
                     $stmtInsert->execute([':date' => $dayStr, ':max' => $daily, ':used' => $per_day]);
                     }
                 }
+                    $userModel = new UserModel($pdo);
+                    $userOrder = $userModel->findById($_SESSION['user_id']);
+                    $deliveryFormatted = (new DateTime($delivery_date))->format('d/m/Y à H:i');
+                    
+                    MailHelper::sendOrderConfirmation(
+                        $userOrder['email'],
+                        $userOrder['first_name'],
+                        $data['order_number'],
+                        $deliveryFormatted
+                    );
+
                     header('Location: /orders/' . $result['id']);
                     exit();
                 }
@@ -656,12 +667,59 @@ switch($url) {
         
     case '/forgot-password':
         if ($method === 'GET') {
-            echo json_encode(['message' => 'Formulaire réinitialisation mot de passe']);
+            require_once '../src/views/client/forgot-password.php';
         }
         if ($method === 'POST') {
-            $data = json_decode(file_get_contents('php://input'), true);
-            $result = $auth->forgotPassword($data['email']);
-            echo json_encode($result);
+            SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+            $email = SecurityHelper::sanitize($_POST['email'] ?? '');
+            if (!SecurityHelper::validateEmail($email)) {
+                $error = 'Adresse email invalide.';
+                require_once '../src/views/client/forgot-password.php';
+                break;
+            }
+            $auth->forgotPassword($email);
+            $success = 'Si un compte existe avec cet email, un lien de réinitialisation vous a été envoyé.';
+            require_once '../src/views/client/forgot-password.php';
+        }
+    break;
+
+    case '/reset-password':
+        $token = SecurityHelper::sanitize($_GET['token'] ?? '');
+        if (!$token) {
+            http_response_code(400);
+            echo 'Lien invalide.';
+            exit();
+        }
+        $tokenModel = new TokenModel($pdo);
+        $tokenData  = $tokenModel->findByValue($token);
+        if (!$tokenData) {
+            http_response_code(400);
+            echo 'Lien invalide ou expiré.';
+            exit();
+        }
+        if ($method === 'GET') {
+            require_once '../src/views/client/reset-password.php';
+        }
+        if ($method === 'POST') {
+            SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+            $password        = $_POST['password'] ?? '';
+            $passwordConfirm = $_POST['password_confirm'] ?? '';
+            if ($password !== $passwordConfirm) {
+                $error = 'Les mots de passe ne correspondent pas.';
+                require_once '../src/views/client/reset-password.php';
+                break;
+            }
+            if (!SecurityHelper::validatePassword($password)) {
+                $error = 'Le mot de passe doit contenir au moins 14 caractères, 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.';
+                require_once '../src/views/client/reset-password.php';
+                break;
+            }
+            $hashed = password_hash($password, PASSWORD_DEFAULT);
+            $userModel = new UserModel($pdo);
+            $userModel->updatePassword($tokenData['user_id'], $hashed);
+            $tokenModel->markAsUsed($tokenData['id']);
+            header('Location: /login?reset=1');
+            exit();
         }
         break;
         

@@ -10,8 +10,8 @@ class TokenModel {
 
     public function create($data) {
         $stmt = $this->pdo->prepare("
-            INSERT INTO tokens (user_id, value, expires_at)
-            VALUES (:user_id, :value, :expires_at)
+            INSERT INTO tokens (id, user_id, value, expires_at)
+            VALUES (UUID(), :user_id, :value, :expires_at)
         ");
         $stmt->execute([
             ':user_id' => $data['user_id'],
@@ -26,5 +26,10 @@ class TokenModel {
         ");
         $stmt->execute([':value' => $value]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function markAsUsed($id) {
+        $stmt = $this->pdo->prepare("UPDATE tokens SET is_used = 1 WHERE id = :id");
+        $stmt->execute([':id' => $id]);
     }
 }

@@ -92,6 +92,9 @@ class AuthController {
         ]);
 
         // Envoyer l'email
+        $scheme = 'http';
+        $resetLink = 'http://localhost:8000/reset-password?token=' . $token;
+        MailHelper::sendResetPassword($user['email'], $user['first_name'], $resetLink);
 
         return ['success' => true];
     }
