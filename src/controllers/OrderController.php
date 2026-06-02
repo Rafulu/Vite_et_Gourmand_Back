@@ -57,6 +57,23 @@ class OrderController {
 
         $orderModel = new OrderModel($this->pdo);
         $orderModel->updateStatus($id, $status, $_SESSION['user_id'], $reason, $contact);
+        
+        // Mail fin de commande
+        if ($status === 'TERMINEE') {
+            $orderData = $orderModel->findById($id);
+            $userModel = new UserModel($this->pdo);
+            $client = $userModel->findById($orderData['user_id']);
+            MailHelper::sendOrderCompleted($client['email'], $client['first_name'], (int)$id);
+        }
+
+        // Mail retour matériel
+        if ($status === 'ATTENTE_MATERIEL') {
+            $orderData = $orderModel->findById($id);
+            $userModel = new UserModel($this->pdo);
+            $client = $userModel->findById($orderData['user_id']);
+            MailHelper::sendMaterialReturn($client['email'], $client['first_name'], $orderData['order_number']);
+        }
+        
         if ($status === 'ANNULEE') {
             $orderData = $orderModel->findById($id);
             if ($orderData) {

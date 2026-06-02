@@ -111,7 +111,7 @@ class MailHelper
             <h1>Bonjour {$name},</h1>
             <p>Votre commande a été livrée et est maintenant terminée.</p>
             <p>Nous espérons que vous avez apprécié notre prestation !</p>
-            <p><a href='/my-reviews'>Cliquez ici pour donner votre avis</a></p>
+            <p><a href='http://localhost:8000/my-reviews'>Cliquez ici pour donner votre avis</a></p>
             <p>À bientôt,<br>L'équipe Vite &amp; Gourmand</p>
         ";
         self::send($to, $name, 'Votre commande est terminée - Donnez votre avis !', $body);
