@@ -64,6 +64,9 @@
                         <span class="badge bg-secondary"><?php echo $dish['category']; ?></span>
                         <h3 class="card-title h6 mt-2"><?php echo htmlspecialchars($dish['name']); ?></h3>
                         <p class="small text-muted"><?php echo $dish['diet']; ?></p>
+                        <?php if ($dish['allergens']): ?>
+                        <p class="small text-danger">Allergènes : <?php echo htmlspecialchars($dish['allergens']); ?></p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

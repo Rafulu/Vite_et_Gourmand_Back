@@ -266,7 +266,7 @@
                                       id="avail-<?php echo (int)$r['id']; ?>"
                                       aria-live="polite"
                                       aria-label="Disponibilité de <?php echo htmlspecialchars($r['name']); ?>">
-                                    Chargement...
+                                    Sélectionnez une date de Livraison
                                 </span>
                             </div>
 

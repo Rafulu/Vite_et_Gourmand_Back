@@ -98,10 +98,14 @@ class MenuModel {
     // Récupère les plats d'un menu
     public function findDishesByMenuId($menu_id) {
         $stmt = $this->pdo->prepare("
-            SELECT d.* FROM dishes d
+            SELECT d.*, GROUP_CONCAT(a.name SEPARATOR ', ') AS allergens
+            FROM dishes d
             JOIN composition_menu cm ON d.id = cm.dish_id
+            LEFT JOIN allergen_dish ad ON d.id = ad.dish_id
+            LEFT JOIN allergens a ON ad.allergen_id = a.id
             WHERE cm.menu_id = :menu_id
             AND d.is_active = 1
+            GROUP BY d.id
         ");
         $stmt->execute([':menu_id' => $menu_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
