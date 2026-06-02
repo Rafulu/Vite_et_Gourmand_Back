@@ -86,7 +86,7 @@
                                     <p><strong><?= htmlspecialchars($avis['first_name'] . ' ' . mb_substr($avis['last_name'], 0, 1)) ?>.</strong></p>
                                     <p><em><?= htmlspecialchars($avis['menu_name']) ?></em></p>
                                     <p><?= str_repeat('⭐', $avis['note']) ?></p>
-                                    <p><?= htmlspecialchars($avis['comment']) ?></p>
+                                    <p><?= htmlspecialchars($avis['comment'], ENT_COMPAT, 'UTF-8') ?></p>
                                 </div>
                             <?php endforeach; ?>
                         </div>

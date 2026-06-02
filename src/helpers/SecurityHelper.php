@@ -48,7 +48,7 @@ class SecurityHelper {
 
     // Nettoyage des données d'un formulaire
     public static function sanitize($data) {
-        return htmlspecialchars(strip_tags(trim($data)));
+        return htmlspecialchars(strip_tags(trim($data)), ENT_COMPAT, 'UTF-8');
     }
 
     // Création Token CSRF

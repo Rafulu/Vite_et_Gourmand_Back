@@ -44,7 +44,7 @@
                         <tr>
                             <td><?php echo htmlspecialchars($r['order_number']); ?></td>
                             <td><?php echo htmlspecialchars($r['note']); ?>/5</td>
-                            <td><?php echo htmlspecialchars($r['comment']); ?></td>
+                            <td><?php echo htmlspecialchars($r['comment'], ENT_COMPAT, 'UTF-8'); ?></td>
                             <td><?php echo date('d/m/Y', strtotime($r['created_at'])); ?></td>
                             <td>
                                 <?php if ($r['is_validated']): ?>
