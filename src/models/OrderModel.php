@@ -144,4 +144,35 @@ class OrderModel {
             ':id'      => $id
         ]);
     }
+
+    public function updateByClient($id, $data) {
+        $stmt = $this->pdo->prepare("
+            UPDATE orders SET
+                guest_count          = :guest_count,
+                delivery_date        = :delivery_date,
+                delivery_address_id  = :delivery_address_id,
+                billing_address_id   = :billing_address_id,
+                total_price          = :total_price,
+                menu_price           = :menu_price,
+                delivery_price       = :delivery_price,
+                option_price         = :option_price,
+                discount             = :discount,
+                detail               = :detail,
+                update_at            = NOW()
+            WHERE id = :id
+        ");
+        $stmt->execute([
+            ':guest_count'          => $data['guest_count'],
+            ':delivery_date'        => $data['delivery_date'],
+            ':delivery_address_id'  => $data['delivery_address_id'],
+            ':billing_address_id'   => $data['billing_address_id'],
+            ':total_price'          => $data['total_price'],
+            ':menu_price'           => $data['menu_price'] ?? 0,
+            ':delivery_price'       => $data['delivery_price'] ?? 0,
+            ':option_price'         => $data['option_price'] ?? 0,
+            ':discount'             => $data['discount'] ? 1 : 0,
+            ':detail'               => $data['detail'] ?? null,
+            ':id'                   => $id,
+        ]);
+    }
 }

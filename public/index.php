@@ -185,6 +185,53 @@ if (preg_match('/^\/order\/(\d+)$/', $url, $matches)) {
     exit();
 }
 
+// Annulation commande client
+if (preg_match('/^\/orders\/(\d+)\/cancel$/', $url, $matches) && $method === 'POST') {
+    SecurityHelper::requireLogin();
+    SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+    $id = (int)$matches[1];
+    $result = $order->cancelByClient($id);
+    if (isset($result['error'])) {
+        $_SESSION['flash_error'] = $result['error'];
+    } else {
+        $_SESSION['flash_success'] = 'Commande annulée.';
+    }
+    header('Location: /my-orders');
+    exit();
+}
+
+// Modification commande client
+if (preg_match('/^\/orders\/(\d+)\/edit$/', $url, $matches)) {
+    SecurityHelper::requireLogin();
+    $id = (int)$matches[1];
+    $orderData = $order->getById($id);
+
+    if (isset($orderData['error']) || $orderData['user_id'] != $_SESSION['user_id'] || $orderData['status'] !== 'EN_ATTENTE') {
+        header('Location: /my-orders');
+        exit();
+    }
+
+    if ($method === 'POST') {
+        SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+        $result = $order->updateByClient($id, $_POST);
+        if (isset($result['error'])) {
+            $_SESSION['flash_error'] = $result['error'];
+        } else {
+            $_SESSION['flash_success'] = 'Commande modifiée.';
+            header('Location: /my-orders');
+            exit();
+        }
+    }
+
+    $addressModel = new AddressModel($pdo);
+    $addresses = $addressModel->findByUserId($_SESSION['user_id']);
+    $menuData = (new MenuModel($pdo))->findById($orderData['menu_id']);
+    $stmt = $pdo->query("SELECT * FROM resources ORDER BY type, name");
+    $resources = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    require_once '../src/views/client/order-edit.php';
+    exit();
+}
+
 // Gestion des routes dynamiques pour les confirmation d'order
 if (preg_match('/^\/orders\/(\d+)$/', $url, $matches)) {
     SecurityHelper::requireLogin();

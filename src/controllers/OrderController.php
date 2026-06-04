@@ -145,4 +145,42 @@ class OrderController {
         $orderModel->updateComment($id, $comment);
         return ['success' => true];
     }
+
+    public function cancelByClient($id) {
+        $orderModel = new OrderModel($this->pdo);
+        $order = $orderModel->findById($id);
+
+        if (!$order || $order['user_id'] != $_SESSION['user_id']) {
+            return ['error' => 'Non autorisé'];
+        }
+        if ($order['status'] !== 'EN_ATTENTE') {
+            return ['error' => 'Annulation impossible : la commande a déjà été prise en charge.'];
+        }
+
+        $orderModel->updateStatus($id, 'ANNULEE', $_SESSION['user_id'], 'Annulée par le client', null);
+        return ['success' => true];
+    }
+
+    public function updateByClient($id, $data) {
+        $orderModel = new OrderModel($this->pdo);
+        $order = $orderModel->findById($id);
+
+        if (!$order || $order['user_id'] != $_SESSION['user_id']) {
+            return ['error' => 'Non autorisé'];
+        }
+        if ($order['status'] !== 'EN_ATTENTE') {
+            return ['error' => 'Modification impossible : la commande a déjà été prise en charge.'];
+        }
+
+        $allowed = ['guest_count', 'delivery_date', 'delivery_time', 'delivery_address_id', 'billing_address_id', 'additional_info', 'total_price', 'delivery_price', 'option_price', 'menu_price'];
+        $update = [];
+        foreach ($allowed as $field) {
+            if (isset($data[$field])) {
+                $update[$field] = SecurityHelper::sanitize($data[$field]);
+            }
+        }
+
+        $orderModel->updateByClient($id, $update);
+        return ['success' => true];
+    }
 }
