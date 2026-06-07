@@ -9,7 +9,8 @@ class MenuModel {
     }
 
     // Requête de base réutilisable
-    private function baseQuery() {
+    private function baseQuery($activeOnly = true) {
+        $where = $activeOnly ? "WHERE m.is_active = 1" : "WHERE 1=1";
         return "
             SELECT m.*, t.name as theme_name,
             GROUP_CONCAT(DISTINCT a.name) as allergens,
@@ -21,20 +22,20 @@ class MenuModel {
             LEFT JOIN dishes d ON cm.dish_id = d.id
             LEFT JOIN allergen_dish ad ON d.id = ad.dish_id
             LEFT JOIN allergens a ON ad.allergen_id = a.id
-            WHERE m.is_active = 1
+            $where
             GROUP BY m.id
         ";
     }
 
-    // Récupère tous les menus actifs
-    public function findAll() {
-        $stmt = $this->pdo->prepare($this->baseQuery());
+    public function findAll($activeOnly = true) {
+        $stmt = $this->pdo->prepare($this->baseQuery($activeOnly) . " ORDER BY m.is_active DESC, m.id DESC");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     // Récupère un menu par son id
-    public function findById($id) {
+    public function findById($id, $activeOnly = true) {
+        $activeFilter = $activeOnly ? "AND m.is_active = 1" : "";
         $sql = "
             SELECT m.*, t.name as theme_name,
             GROUP_CONCAT(DISTINCT a.name) as allergens,
@@ -46,7 +47,7 @@ class MenuModel {
             LEFT JOIN dishes d ON cm.dish_id = d.id
             LEFT JOIN allergen_dish ad ON d.id = ad.dish_id
             LEFT JOIN allergens a ON ad.allergen_id = a.id
-            WHERE m.is_active = 1 AND m.id = :id
+            WHERE m.id = :id $activeFilter
             GROUP BY m.id
         ";
         $stmt = $this->pdo->prepare($sql);
@@ -109,5 +110,58 @@ class MenuModel {
         ");
         $stmt->execute([':menu_id' => $menu_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Créer un menu
+    public function create($data) {
+        $stmt = $this->pdo->prepare("
+            INSERT INTO menus (title, description, theme_id, min_guests, price_per_person, stock, conditions, is_active)
+            VALUES (:title, :description, :theme_id, :min_guests, :price_per_person, :stock, :conditions, 1)
+        ");
+        $stmt->execute([
+            ':title'            => $data['title'],
+            ':description'      => $data['description'],
+            ':theme_id'         => $data['theme_id'],
+            ':min_guests'       => $data['min_guests'],
+            ':price_per_person' => $data['price_per_person'],
+            ':stock'            => $data['stock'],
+            ':conditions'       => $data['conditions'],
+        ]);
+        return $this->pdo->lastInsertId();
+    }
+
+    // Modifier un menu
+    public function update($id, $data) {
+        $stmt = $this->pdo->prepare("
+            UPDATE menus SET title = :title, description = :description, theme_id = :theme_id,
+            min_guests = :min_guests, price_per_person = :price_per_person, stock = :stock, conditions = :conditions
+            WHERE id = :id
+        ");
+        $stmt->execute([
+            ':title'            => $data['title'],
+            ':description'      => $data['description'],
+            ':theme_id'         => $data['theme_id'],
+            ':min_guests'       => $data['min_guests'],
+            ':price_per_person' => $data['price_per_person'],
+            ':stock'            => $data['stock'],
+            ':conditions'       => $data['conditions'],
+            ':id'               => $id,
+        ]);
+    }
+
+    // Désactiver un menu
+    public function disable($id) {
+        $stmt = $this->pdo->prepare("UPDATE menus SET is_active = 0 WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+    }
+
+    // Lier les plats à un menu (remplace la composition existante)
+    public function syncDishes($menu_id, array $dish_ids) {
+        $this->pdo->prepare("DELETE FROM composition_menu WHERE menu_id = :menu_id")
+                  ->execute([':menu_id' => $menu_id]);
+        $stmt = $this->pdo->prepare("INSERT INTO composition_menu (menu_id, dish_id) VALUES (:menu_id, :dish_id)");
+        foreach ($dish_ids as $dish_id) {
+            $stmt->execute([':menu_id' => $menu_id, ':dish_id' => $dish_id]);
+        }
     }
 }
