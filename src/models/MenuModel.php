@@ -164,4 +164,10 @@ class MenuModel {
             $stmt->execute([':menu_id' => $menu_id, ':dish_id' => $dish_id]);
         }
     }
+
+    //Supprimer un menu
+    public function delete($id) {
+        $this->pdo->prepare("DELETE FROM composition_menu WHERE menu_id = :id")->execute([':id' => $id]);
+        $this->pdo->prepare("DELETE FROM menus WHERE id = :id")->execute([':id' => $id]);
+    }
 }

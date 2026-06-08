@@ -398,6 +398,56 @@ if ($url === '/admin/stats/data' && $method === 'GET') {
     exit();
 }
 
+// Modifier un menu
+if (preg_match('/^\/employee\/menus\/(\d+)\/edit$/', $url, $matches)) {
+    SecurityHelper::requireRole([1, 2, 3, 6]);
+    $id = (int)$matches[1];
+    if ($method === 'GET') {
+        $menuData = $menu->getById($id, false);
+        $dishes = $menu->getDishesByMenuId($id);
+        $allDishes = $dish->getAll();
+        $themes = $pdo->query("SELECT * FROM themes")->fetchAll(PDO::FETCH_ASSOC);
+        require_once '../src/views/employee/menu-form.php';
+        exit();
+    }
+    if ($method === 'POST') {
+        SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+        $data = [
+            'title'            => SecurityHelper::sanitize($_POST['title'] ?? ''),
+            'description'      => SecurityHelper::sanitize($_POST['description'] ?? ''),
+            'theme_id'         => filter_var($_POST['theme_id'] ?? '', FILTER_VALIDATE_INT),
+            'min_guests'       => filter_var($_POST['min_guests'] ?? '', FILTER_VALIDATE_INT),
+            'price_per_person' => filter_var($_POST['price_per_person'] ?? '', FILTER_VALIDATE_FLOAT),
+            'stock'            => filter_var($_POST['stock'] ?? '', FILTER_VALIDATE_INT),
+            'conditions'       => SecurityHelper::sanitize($_POST['conditions'] ?? ''),
+            'dish_ids'         => array_map('intval', $_POST['dish_ids'] ?? []),
+        ];
+        $menu->update($id, $data);
+        header('Location: /employee/menus');
+        exit();
+    }
+}
+
+// Désactiver un menu
+if (preg_match('/^\/employee\/menus\/(\d+)\/disable$/', $url, $matches)) {
+    SecurityHelper::requireRole([1, 2, 3, 6]);
+    SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+    $id = (int)$matches[1];
+    $menu->disable($id);
+    header('Location: /employee/menus');
+    exit();
+}
+
+// Supprimer un menu
+if (preg_match('/^\/employee\/menus\/(\d+)\/delete$/', $url, $matches)) {
+    SecurityHelper::requireRole([1, 2, 3, 6]);
+    SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+    $id = (int)$matches[1];
+    $menu->delete($id);
+    header('Location: /employee/menus');
+    exit();
+}
+
 switch($url) {
 
     //Pages publiques
@@ -872,6 +922,38 @@ switch($url) {
         $reviews = $review->getPending();
         require_once '../src/views/employee/reviews-management.php';
         break;
+
+    case '/employee/menus':
+        SecurityHelper::requireRole([1, 2, 3, 6]);
+        $menus = $menu->getAll(false);
+        require_once '../src/views/employee/menus-management.php';
+        break;
+
+    case '/employee/menus/create':
+        SecurityHelper::requireRole([1, 2, 3, 6]);
+        if ($method === 'GET') {
+            $allDishes = $dish->getAll();
+            $themes = $pdo->query("SELECT * FROM themes")->fetchAll(PDO::FETCH_ASSOC);
+            require_once '../src/views/employee/menu-form.php';
+            exit();
+        }
+        if ($method === 'POST') {
+            SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+            $data = [
+                'title'            => SecurityHelper::sanitize($_POST['title'] ?? ''),
+                'description'      => SecurityHelper::sanitize($_POST['description'] ?? ''),
+                'theme_id'         => filter_var($_POST['theme_id'] ?? '', FILTER_VALIDATE_INT),
+                'min_guests'       => filter_var($_POST['min_guests'] ?? '', FILTER_VALIDATE_INT),
+                'price_per_person' => filter_var($_POST['price_per_person'] ?? '', FILTER_VALIDATE_FLOAT),
+                'stock'            => filter_var($_POST['stock'] ?? '', FILTER_VALIDATE_INT),
+                'conditions'       => SecurityHelper::sanitize($_POST['conditions'] ?? ''),
+                'dish_ids'         => array_map('intval', $_POST['dish_ids'] ?? []),
+            ];
+            $menu->create($data);
+            header('Location: /employee/menus');
+            exit();
+        }
+        break;    
 
     // Esapce admin
     case '/admin':
