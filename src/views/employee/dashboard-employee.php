@@ -36,9 +36,9 @@
         <div class="col-12 col-md-6 mb-4">
             <div class="card">
                 <div class="card-body">
-                    <h2 class="card-title h5">Avis clients</h2>
-                    <p>Valider ou refuser les avis déposés.</p>
-                    <a href="/employee/reviews" class="btn btn-primary">Voir les avis</a>
+                    <h2 class="card-title h5">Menus</h2>
+                    <p>Créer, modifier ou désactiver les menus du catalogue.</p>
+                    <a href="/employee/menus" class="btn btn-primary">Gérer les menus</a>
                 </div>
             </div>
         </div>
