@@ -448,6 +448,64 @@ if (preg_match('/^\/employee\/menus\/(\d+)\/delete$/', $url, $matches)) {
     exit();
 }
 
+// Modifier un plat
+if (preg_match('/^\/employee\/dishes\/(\d+)\/edit$/', $url, $matches)) {
+    SecurityHelper::requireRole([1, 2, 3, 6]);
+    $id = (int)$matches[1];
+    if ($method === 'GET') {
+        $dishData = $dish->getById($id, false);
+        if (isset($dishData['error'])) {
+            header('Location: /employee/dishes');
+            exit();
+        }
+        $allergens = $dish->getAllergens();
+        $dishAllergenIds = $dish->getAllergenIds($id);
+        require_once '../src/views/employee/dish-form.php';
+        exit();
+    }
+    if ($method === 'POST') {
+        SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+        $data = [
+            'name'             => SecurityHelper::sanitize($_POST['name'] ?? ''),
+            'category'         => $_POST['category'] ?? '',
+            'diet'             => $_POST['diet'] ?? '',
+            'preparation_time' => filter_var($_POST['preparation_time'] ?? '', FILTER_VALIDATE_INT),
+            'allergen_ids'     => array_map('intval', $_POST['allergen_ids'] ?? []),
+        ];
+        if (!$data['name'] || !in_array($data['category'], ['ENTREE', 'PLAT', 'DESSERT'])
+            || !in_array($data['diet'], ['VEGAN', 'VEGETARIEN', 'CLASSIQUE'])
+            || !$data['preparation_time'] || $data['preparation_time'] < 1) {
+            $error = 'Veuillez vérifier les champs du formulaire.';
+            $dishData = array_merge(['id' => $id], $data);
+            $allergens = $dish->getAllergens();
+            $dishAllergenIds = $data['allergen_ids'];
+            require_once '../src/views/employee/dish-form.php';
+            exit();
+        }
+        $dish->update($id, $data);
+        header('Location: /employee/dishes');
+        exit();
+    }
+}
+
+// Désactiver un plat
+if (preg_match('/^\/employee\/dishes\/(\d+)\/disable$/', $url, $matches) && $method === 'POST') {
+    SecurityHelper::requireRole([1, 2, 3, 6]);
+    SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+    $dish->disable((int)$matches[1]);
+    header('Location: /employee/dishes');
+    exit();
+}
+
+// Réactiver un plat
+if (preg_match('/^\/employee\/dishes\/(\d+)\/enable$/', $url, $matches) && $method === 'POST') {
+    SecurityHelper::requireRole([1, 2, 3, 6]);
+    SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+    $dish->enable((int)$matches[1]);
+    header('Location: /employee/dishes');
+    exit();
+}
+
 switch($url) {
 
     //Pages publiques
@@ -951,6 +1009,44 @@ switch($url) {
             ];
             $menu->create($data);
             header('Location: /employee/menus');
+            exit();
+        }
+        break;   
+        
+        case '/employee/dishes':
+        SecurityHelper::requireRole([1, 2, 3, 6]);
+        $dishes = $dish->getAll(false);
+        require_once '../src/views/employee/dishes-management.php';
+        break;
+
+    case '/employee/dishes/create':
+        SecurityHelper::requireRole([1, 2, 3, 6]);
+        if ($method === 'GET') {
+            $allergens = $dish->getAllergens();
+            require_once '../src/views/employee/dish-form.php';
+            exit();
+        }
+        if ($method === 'POST') {
+            SecurityHelper::verifyCsrfToken($_POST['csrf_token'] ?? '');
+            $data = [
+                'name'             => SecurityHelper::sanitize($_POST['name'] ?? ''),
+                'category'         => $_POST['category'] ?? '',
+                'diet'             => $_POST['diet'] ?? '',
+                'preparation_time' => filter_var($_POST['preparation_time'] ?? '', FILTER_VALIDATE_INT),
+                'allergen_ids'     => array_map('intval', $_POST['allergen_ids'] ?? []),
+            ];
+            if (!$data['name'] || !in_array($data['category'], ['ENTREE', 'PLAT', 'DESSERT'])
+                || !in_array($data['diet'], ['VEGAN', 'VEGETARIEN', 'CLASSIQUE'])
+                || !$data['preparation_time'] || $data['preparation_time'] < 1) {
+                $error = 'Veuillez vérifier les champs du formulaire.';
+                $dishData = $data;
+                $allergens = $dish->getAllergens();
+                $dishAllergenIds = $data['allergen_ids'];
+                require_once '../src/views/employee/dish-form.php';
+                exit();
+            }
+            $dish->create($data);
+            header('Location: /employee/dishes');
             exit();
         }
         break;    
